@@ -1,0 +1,62 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="320" viewBox="0 0 1280 320" role="img" aria-labelledby="t d">
+  <title id="t">Euron Open SmartRouter</title>
+  <desc id="d">Self-hosted, OpenAI-compatible model router: the right AI model for every request</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#06131f"/>
+      <stop offset="1" stop-color="#0a1c2c"/>
+    </linearGradient>
+    <linearGradient id="hub" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#2a78d6"/>
+      <stop offset="1" stop-color="#0284c7"/>
+    </linearGradient>
+    <radialGradient id="halo" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#0ea5e9" stop-opacity="0.32"/>
+      <stop offset="1" stop-color="#0ea5e9" stop-opacity="0"/>
+    </radialGradient>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ffffff" stroke-opacity="0.035"/>
+    </pattern>
+  </defs>
+  <rect width="1280" height="320" rx="16" fill="url(#bg)"/>
+  <rect width="1280" height="320" rx="16" fill="url(#grid)"/>
+
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif">
+    <text x="72" y="140" fill="#eaf4fb" font-size="54" font-weight="650" letter-spacing="-1.2">Euron Open SmartRouter</text>
+    <text x="74" y="186" fill="#93b4c9" font-size="22" font-weight="400">The right AI model for every request. One OpenAI-compatible endpoint.</text>
+    <text x="74" y="246" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="15" fill="#7a9db3" xml:space="preserve">model="auto"<tspan fill="#24435a">  /  </tspan>measured quality<tspan fill="#24435a">  /  </tspan>health-aware fallback<tspan fill="#24435a">  /  </tspan>every decision explained</text>
+  </g>
+
+  <!-- Three requests of different difficulty, routed to three different models -->
+  <g transform="translate(860 52)" font-family="JetBrains Mono, SFMono-Regular, Menlo, monospace" font-size="11">
+    <circle cx="170" cy="108" r="120" fill="url(#halo)"/>
+    <!-- incoming -->
+    <rect x="0" y="40" width="96" height="26" rx="8" fill="#0f2638"/>
+    <text x="12" y="57" fill="#7dd3fc">classify</text>
+    <rect x="0" y="95" width="96" height="26" rx="8" fill="#0f2638"/>
+    <text x="12" y="112" fill="#7dd3fc">summarize</text>
+    <rect x="0" y="150" width="96" height="26" rx="8" fill="#0f2638"/>
+    <text x="12" y="167" fill="#7dd3fc">hard code</text>
+    <path d="M100 53 C122 53 124 100 140 106 M100 108 H140 M100 163 C122 163 124 116 140 110" stroke="#24435a" stroke-width="2" stroke-dasharray="4 4" fill="none"/>
+    <!-- router hub -->
+    <rect x="140" y="78" width="60" height="60" rx="16" fill="url(#hub)"/>
+    <g fill="none" stroke="#ffffff" stroke-width="2.4" stroke-linecap="round">
+      <path d="M152 108h8"/>
+      <path d="M160 108c5 0 6-11 12-11h8" stroke-opacity="0.6"/>
+      <path d="M160 108h20"/>
+      <path d="M160 108c5 0 6 11 12 11h8" stroke-opacity="0.6"/>
+    </g>
+    <circle cx="152" cy="108" r="3" fill="#ffffff"/>
+    <circle cx="183" cy="108" r="3.6" fill="#ffffff"/>
+    <!-- outcomes -->
+    <path d="M200 98 C224 90 228 56 262 53" stroke="#34d399" stroke-width="2" fill="none"/>
+    <rect x="266" y="40" width="126" height="26" rx="8" fill="#0d2a22"/>
+    <text x="278" y="57" fill="#6ee7b7">llama-local  $0</text>
+    <path d="M200 108 H262" stroke="#38bdf8" stroke-width="2"/>
+    <rect x="266" y="95" width="126" height="26" rx="8" fill="#0c2638"/>
+    <text x="278" y="112" fill="#bae6fd">gpt-fast  -97%</text>
+    <path d="M200 118 C224 126 228 160 262 163" stroke="#a5b4fc" stroke-width="2" fill="none"/>
+    <rect x="266" y="150" width="126" height="26" rx="8" fill="#1b1f3d"/>
+    <text x="278" y="167" fill="#c7d2fe">claude-pro</text>
+  </g>
+</svg>

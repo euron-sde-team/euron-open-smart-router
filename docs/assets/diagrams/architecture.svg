@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="580" viewBox="0 0 1200 580" role="img" aria-labelledby="t d">
+  <title id="t">SmartRouter architecture</title>
+  <desc id="d">Applications call the gateway with model auto. The gateway authenticates the key, analyses the request, ranks the models using Postgres configuration and the quality table and Redis health, calls the chosen model endpoint and falls back on retryable errors, then appends the decision to a Redis stream. Workers drain decisions into Postgres, compute rollups, probe endpoint health and run benchmarks, whose per-case results go to S3. The dashboard reads the admin API.</desc>
+  <defs>
+    <marker id="a" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#64748b"/></marker>
+    <marker id="g" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0 0L10 5L0 10z" fill="#0284c7"/></marker>
+    <filter id="s" x="-10%" y="-10%" width="120%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.10"/></filter>
+  </defs>
+  <rect width="1200" height="580" rx="16" fill="#f5f8fb"/>
+  <g font-family="Inter, -apple-system, Segoe UI, Helvetica, Arial, sans-serif" fill="#0f172a">
+
+    <!-- clients -->
+    <text x="40" y="44" font-size="12" font-weight="600" fill="#64748b" letter-spacing="1">CLIENTS</text>
+    <g filter="url(#s)">
+      <rect x="40" y="62" width="200" height="64" rx="12" fill="#fff"/>
+      <rect x="40" y="142" width="200" height="64" rx="12" fill="#fff"/>
+      <rect x="40" y="410" width="200" height="64" rx="12" fill="#fff"/>
+    </g>
+    <text x="60" y="90" font-size="15" font-weight="600">Applications</text>
+    <text x="60" y="110" font-size="12" fill="#64748b">OpenAI SDK, model="auto"</text>
+    <text x="60" y="170" font-size="15" font-weight="600">Pinned callers</text>
+    <text x="60" y="190" font-size="12" fill="#64748b">model="gpt-pro": passthrough</text>
+    <text x="60" y="438" font-size="15" font-weight="600">Dashboard</text>
+    <text x="60" y="458" font-size="12" fill="#64748b">Next.js, same-origin /api</text>
+
+    <!-- gateway -->
+    <rect x="320" y="52" width="380" height="290" rx="16" fill="#e3f3fc"/>
+    <text x="344" y="84" font-size="16" font-weight="700" fill="#075985">Gateway  /v1</text>
+    <text x="344" y="104" font-size="12" fill="#0284c7">FastAPI, stateless, N replicas</text>
+    <g font-size="12.5" fill="#082f49">
+      <rect x="344" y="122" width="160" height="34" rx="9" fill="#fff"/><text x="358" y="144">1 Authenticate key</text>
+      <rect x="516" y="122" width="160" height="34" rx="9" fill="#fff"/><text x="530" y="144">2 Analyze request</text>
+      <rect x="344" y="166" width="160" height="34" rx="9" fill="#fff"/><text x="358" y="188">3 Filter, rank models</text>
+      <rect x="516" y="166" width="160" height="34" rx="9" fill="#fff"/><text x="530" y="188">4 Health gate</text>
+      <rect x="344" y="210" width="332" height="34" rx="9" fill="#fff"/><text x="358" y="232">5 Call the model; fall back on 5xx, 429, timeout</text>
+      <rect x="344" y="254" width="332" height="34" rx="9" fill="#0284c7"/><text x="358" y="276" fill="#fff">6 Record decision: one XADD, headers explain it</text>
+    </g>
+    <text x="344" y="318" font-size="12" fill="#0369a1">task, complexity, candidates, scores, reasons, cost vs baseline</text>
+
+    <!-- admin api -->
+    <rect x="320" y="398" width="380" height="88" rx="16" fill="#fff" filter="url(#s)"/>
+    <text x="344" y="430" font-size="15" font-weight="600">Admin API  /api/v1</text>
+    <text x="344" y="452" font-size="12" fill="#64748b">policies, models, quality, simulate, decisions,</text>
+    <text x="344" y="470" font-size="12" fill="#64748b">analytics, benchmarks, audit (roles, CSRF)</text>
+
+    <!-- state -->
+    <text x="780" y="44" font-size="12" font-weight="600" fill="#64748b" letter-spacing="1">STATE AND KEYS</text>
+    <g filter="url(#s)">
+      <rect x="780" y="62" width="180" height="96" rx="12" fill="#fff"/>
+      <rect x="780" y="176" width="180" height="96" rx="12" fill="#fff"/>
+      <rect x="780" y="290" width="180" height="52" rx="12" fill="#fff"/>
+      <rect x="780" y="360" width="180" height="52" rx="12" fill="#fff"/>
+    </g>
+    <text x="798" y="88" font-size="15" font-weight="600">Redis</text>
+    <text x="798" y="108" font-size="12" fill="#64748b">health, breakers (Lua)</text>
+    <text x="798" y="124" font-size="12" fill="#64748b">decision stream, limits</text>
+    <text x="798" y="140" font-size="12" fill="#64748b">benchmark queue</text>
+    <text x="798" y="202" font-size="15" font-weight="600">PostgreSQL</text>
+    <text x="798" y="222" font-size="12" fill="#64748b">catalog, policies, quality</text>
+    <text x="798" y="238" font-size="12" fill="#64748b">decision log, rollups</text>
+    <text x="798" y="254" font-size="12" fill="#64748b">benchmark runs</text>
+    <text x="798" y="321" font-size="15" font-weight="600">KMS <tspan font-size="12" font-weight="400" fill="#64748b">sealed endpoint keys</tspan></text>
+    <text x="798" y="391" font-size="15" font-weight="600">S3 <tspan font-size="12" font-weight="400" fill="#64748b">benchmark answers</tspan></text>
+
+    <!-- model endpoints -->
+    <text x="1010" y="44" font-size="12" font-weight="600" fill="#64748b" letter-spacing="1">MODEL ENDPOINTS</text>
+    <g filter="url(#s)">
+      <rect x="1010" y="62" width="160" height="52" rx="12" fill="#fff"/>
+      <rect x="1010" y="126" width="160" height="52" rx="12" fill="#fff"/>
+      <rect x="1010" y="190" width="160" height="52" rx="12" fill="#fff"/>
+      <rect x="1010" y="254" width="160" height="70" rx="12" fill="#fff"/>
+    </g>
+    <text x="1026" y="86" font-size="13.5" font-weight="600">OpenAI-compatible</text>
+    <text x="1026" y="104" font-size="11.5" fill="#64748b">OpenAI, Groq, vLLM</text>
+    <text x="1026" y="150" font-size="13.5" font-weight="600">Anthropic</text>
+    <text x="1026" y="168" font-size="11.5" fill="#64748b">Messages API</text>
+    <text x="1026" y="214" font-size="13.5" font-weight="600">Local</text>
+    <text x="1026" y="232" font-size="11.5" fill="#64748b">Ollama, LM Studio</text>
+    <text x="1026" y="278" font-size="13.5" font-weight="600">TokenShield</text>
+    <text x="1026" y="296" font-size="11.5" fill="#64748b">budgets enforced there;</text>
+    <text x="1026" y="312" font-size="11.5" fill="#64748b">cost header read back</text>
+
+    <!-- worker -->
+    <rect x="780" y="440" width="390" height="100" rx="16" fill="#fff" filter="url(#s)"/>
+    <text x="804" y="472" font-size="15" font-weight="600">Worker</text>
+    <text x="804" y="494" font-size="12" fill="#64748b">drains decisions into Postgres (reclaims a dead consumer's),</text>
+    <text x="804" y="512" font-size="12" fill="#64748b">hourly rollups, endpoint health probes, benchmark runs</text>
+    <text x="804" y="530" font-size="12" fill="#64748b">(every model, then every policy, cross-fitted)</text>
+
+    <text x="790" y="24" font-size="11.5" fill="#0284c7">call the chosen model, then the next on failure</text>
+    <!-- arrows -->
+    <g stroke="#64748b" stroke-width="1.6" fill="none">
+      <path d="M240 94 H316" marker-end="url(#g)" stroke="#0284c7"/>
+      <path d="M240 174 H316" marker-end="url(#g)" stroke="#0284c7"/>
+      <path d="M240 442 H316" marker-end="url(#a)"/>
+      <path d="M700 110 H776" marker-end="url(#a)"/>
+      <path d="M700 224 H776" marker-end="url(#a)"/>
+      <path d="M510 398 V346" marker-end="url(#a)"/>
+      <path d="M700 442 C740 442 740 230 776 224" marker-end="url(#a)"/>
+      <path d="M676 220 H710 V30 H985 V58" marker-end="url(#g)" stroke="#0284c7"/>
+      <path d="M870 440 V416" marker-end="url(#a)"/>
+      <path d="M780 500 H760 V250 H776" marker-end="url(#a)"/>
+      <path d="M870 160 V172" marker-end="url(#a)"/>
+    </g>
+  </g>
+</svg>

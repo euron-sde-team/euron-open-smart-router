@@ -1,0 +1,4064 @@
+openapi: 3.1.0
+info:
+  title: Euron Open SmartRouter
+  description: '
+
+    Self-hosted, OpenAI-compatible model router. Point any OpenAI SDK at `/v1` with a SmartRouter
+
+    key and send `model="auto"` (or `auto:<policy>`): each request is analysed, the eligible models
+
+    are ranked by cost, latency and benchmark quality under your policy, the best one answers, and
+
+    a controlled fallback takes over if it fails. Every decision is logged and explained.
+
+
+    The `/api/v1` endpoints power the dashboard and are available to automation with a session
+
+    token (`POST /api/v1/auth/login`).
+
+    '
+  version: 0.1.0
+paths:
+  /v1/chat/completions:
+    post:
+      tags:
+      - gateway
+      summary: Create a chat completion; model='auto' routes it
+      operationId: chat_completions_v1_chat_completions_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema: {}
+  /v1/models:
+    get:
+      tags:
+      - gateway
+      summary: Routes and models available to this key
+      operationId: list_models_v1_models_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response List Models V1 Models Get
+  /v1/feedback:
+    post:
+      tags:
+      - gateway
+      summary: Rate the answer to a routed request
+      operationId: feedback_v1_feedback_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FeedbackIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/login:
+    post:
+      tags:
+      - auth
+      summary: Sign in to the dashboard
+      operationId: login_api_v1_auth_login_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/auth/logout:
+    post:
+      tags:
+      - auth
+      summary: Sign out
+      operationId: logout_api_v1_auth_logout_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+  /api/v1/auth/me:
+    get:
+      tags:
+      - auth
+      summary: The signed-in user
+      operationId: me_api_v1_auth_me_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+  /api/v1/auth/password:
+    post:
+      tags:
+      - auth
+      summary: Change your password
+      operationId: password_api_v1_auth_password_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users:
+    get:
+      tags:
+      - users
+      summary: List dashboard users
+      operationId: list_users_api_v1_users_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/UserOut'
+                type: array
+                title: Response List Users Api V1 Users Get
+    post:
+      tags:
+      - users
+      summary: Invite a dashboard user
+      operationId: create_user_api_v1_users_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserCreate'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/users/{user_id}:
+    patch:
+      tags:
+      - users
+      summary: Update a user's name, role or access
+      operationId: update_user_api_v1_users__user_id__patch
+      parameters:
+      - name: user_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: User Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/teams:
+    get:
+      tags:
+      - teams
+      summary: List teams
+      operationId: list_teams_api_v1_teams_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/TeamOut'
+                type: array
+                title: Response List Teams Api V1 Teams Get
+    post:
+      tags:
+      - teams
+      summary: Create a team
+      operationId: create_team_api_v1_teams_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/teams/{team_id}:
+    patch:
+      tags:
+      - teams
+      summary: Update a team
+      operationId: update_team_api_v1_teams__team_id__patch
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Team Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TeamOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - teams
+      summary: Delete an empty team
+      operationId: delete_team_api_v1_teams__team_id__delete
+      parameters:
+      - name: team_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Team Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects:
+    get:
+      tags:
+      - projects
+      summary: List projects
+      operationId: list_projects_api_v1_projects_get
+      parameters:
+      - name: include_archived
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Archived
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectOut'
+                title: Response List Projects Api V1 Projects Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - projects
+      summary: Create a project
+      operationId: create_project_api_v1_projects_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/projects/{project_id}:
+    get:
+      tags:
+      - projects
+      summary: Get a project
+      operationId: get_project_api_v1_projects__project_id__get
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    patch:
+      tags:
+      - projects
+      summary: Update or archive a project
+      operationId: update_project_api_v1_projects__project_id__patch
+      parameters:
+      - name: project_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Project Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/keys:
+    get:
+      tags:
+      - api keys
+      summary: List gateway API keys
+      operationId: list_keys_api_v1_keys_get
+      parameters:
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      - name: include_revoked
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Revoked
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/KeyOut'
+                title: Response List Keys Api V1 Keys Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - api keys
+      summary: Create a key (shown once)
+      operationId: create_key_api_v1_keys_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyIn'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyCreated'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/keys/{key_id}:
+    patch:
+      tags:
+      - api keys
+      summary: Update a key's name or limits
+      operationId: update_key_api_v1_keys__key_id__patch
+      parameters:
+      - name: key_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Key Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KeyUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/keys/{key_id}/revoke:
+    post:
+      tags:
+      - api keys
+      summary: Revoke a key immediately
+      operationId: revoke_key_api_v1_keys__key_id__revoke_post
+      parameters:
+      - name: key_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Key Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/providers:
+    get:
+      tags:
+      - endpoints and models
+      summary: List providers
+      operationId: list_providers_api_v1_providers_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ProviderOut'
+                type: array
+                title: Response List Providers Api V1 Providers Get
+    post:
+      tags:
+      - endpoints and models
+      summary: Add a provider
+      operationId: create_provider_api_v1_providers_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/providers/{provider_id}:
+    patch:
+      tags:
+      - endpoints and models
+      summary: Update a provider
+      operationId: update_provider_api_v1_providers__provider_id__patch
+      parameters:
+      - name: provider_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Provider Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProviderUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/providers/{provider_id}/test:
+    post:
+      tags:
+      - endpoints and models
+      summary: Test connectivity
+      operationId: check_provider_api_v1_providers__provider_id__test_post
+      parameters:
+      - name: provider_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Provider Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderTest'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/models:
+    get:
+      tags:
+      - endpoints and models
+      summary: List models
+      operationId: list_models_api_v1_models_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ModelOut'
+                type: array
+                title: Response List Models Api V1 Models Get
+    post:
+      tags:
+      - endpoints and models
+      summary: Add a model alias
+      operationId: create_model_api_v1_models_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/models/{model_id}:
+    patch:
+      tags:
+      - endpoints and models
+      summary: Update a model
+      operationId: update_model_api_v1_models__model_id__patch
+      parameters:
+      - name: model_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Model Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ModelUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ModelOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/policies:
+    get:
+      tags:
+      - routing
+      summary: List routing policies
+      operationId: list_policies_api_v1_policies_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/PolicyOut'
+                type: array
+                title: Response List Policies Api V1 Policies Get
+    post:
+      tags:
+      - routing
+      summary: Create a routing policy
+      operationId: create_policy_api_v1_policies_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyIn'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/policies/{policy_id}:
+    patch:
+      tags:
+      - routing
+      summary: Update a routing policy
+      operationId: update_policy_api_v1_policies__policy_id__patch
+      parameters:
+      - name: policy_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Policy Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyUpdate'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    delete:
+      tags:
+      - routing
+      summary: Delete a routing policy
+      operationId: delete_policy_api_v1_policies__policy_id__delete
+      parameters:
+      - name: policy_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Policy Id
+      responses:
+        '204':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/route/simulate:
+    post:
+      tags:
+      - routing
+      summary: Rank models for a request without calling any
+      operationId: simulate_api_v1_route_simulate_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulateIn'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulateOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/quality:
+    get:
+      tags:
+      - routing
+      summary: The quality table the router ranks by
+      operationId: quality_api_v1_quality_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/QualityCell'
+                type: array
+                title: Response Quality Api V1 Quality Get
+    put:
+      tags:
+      - routing
+      summary: Set a quality score manually
+      operationId: set_quality_api_v1_quality_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QualityOverride'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QualityCell'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/health/models:
+    get:
+      tags:
+      - health
+      summary: Live health of every model
+      operationId: models_api_v1_health_models_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/ModelHealth'
+                type: array
+                title: Response Models Api V1 Health Models Get
+  /api/v1/health/models/{alias}/reset:
+    post:
+      tags:
+      - health
+      summary: Close a model's circuit by hand
+      operationId: reset_api_v1_health_models__alias__reset_post
+      parameters:
+      - name: alias
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Alias
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/decisions:
+    get:
+      tags:
+      - decisions and analytics
+      summary: The routing decision log
+      operationId: list_decisions_api_v1_decisions_get
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      - name: policy
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Policy
+      - name: model
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Model
+      - name: task
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Task
+      - name: status
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+      - name: fallback
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Fallback
+      - name: source
+        in: query
+        required: false
+        schema:
+          enum:
+          - api
+          - benchmark
+          type: string
+          description: 'api: real traffic (default); benchmark: benchmark policy runs'
+          default: api
+          title: Source
+        description: 'api: real traffic (default); benchmark: benchmark policy runs'
+      - name: q
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            maxLength: 64
+          - type: 'null'
+          description: Request id prefix
+          title: Q
+        description: Request id prefix
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_DecisionOut_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/decisions/{request_id}:
+    get:
+      tags:
+      - decisions and analytics
+      summary: 'One decision: analysis, every candidate with its score and reason, attempts, costs'
+      operationId: get_decision_api_v1_decisions__request_id__get
+      parameters:
+      - name: request_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Request Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecisionDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analytics/overview:
+    get:
+      tags:
+      - decisions and analytics
+      summary: Totals vs the previous period
+      operationId: overview_api_v1_analytics_overview_get
+      parameters:
+      - name: range
+        in: query
+        required: false
+        schema:
+          enum:
+          - 1h
+          - 24h
+          - 7d
+          - 30d
+          - 90d
+          type: string
+          default: 24h
+          title: Range
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Overview'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analytics/timeseries:
+    get:
+      tags:
+      - decisions and analytics
+      summary: Cost vs baseline over time
+      operationId: timeseries_api_v1_analytics_timeseries_get
+      parameters:
+      - name: range
+        in: query
+        required: false
+        schema:
+          enum:
+          - 1h
+          - 24h
+          - 7d
+          - 30d
+          - 90d
+          type: string
+          default: 24h
+          title: Range
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SeriesPoint'
+                title: Response Timeseries Api V1 Analytics Timeseries Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/analytics/breakdown:
+    get:
+      tags:
+      - decisions and analytics
+      summary: Traffic and savings by dimension
+      operationId: breakdown_api_v1_analytics_breakdown_get
+      parameters:
+      - name: by
+        in: query
+        required: false
+        schema:
+          enum:
+          - model
+          - task
+          - policy
+          - project
+          - status
+          type: string
+          default: model
+          title: By
+      - name: range
+        in: query
+        required: false
+        schema:
+          enum:
+          - 1h
+          - 24h
+          - 7d
+          - 30d
+          - 90d
+          type: string
+          default: 24h
+          title: Range
+      - name: project_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BreakdownRow'
+                title: Response Breakdown Api V1 Analytics Breakdown Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/benchmarks/suite:
+    get:
+      tags:
+      - benchmarks
+      summary: The benchmark cases
+      operationId: suite_api_v1_benchmarks_suite_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: '#/components/schemas/SuiteCase'
+                type: array
+                title: Response Suite Api V1 Benchmarks Suite Get
+  /api/v1/benchmarks/runs:
+    get:
+      tags:
+      - benchmarks
+      summary: Recent benchmark runs
+      operationId: runs_api_v1_benchmarks_runs_get
+      parameters:
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 100
+          minimum: 1
+          default: 20
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RunOut'
+                title: Response Runs Api V1 Benchmarks Runs Get
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+    post:
+      tags:
+      - benchmarks
+      summary: Queue a benchmark run
+      operationId: start_api_v1_benchmarks_runs_post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RunIn'
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunOut'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/benchmarks/runs/{run_id}:
+    get:
+      tags:
+      - benchmarks
+      summary: A run with every result
+      operationId: run_detail_api_v1_benchmarks_runs__run_id__get
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RunDetail'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/benchmarks/runs/{run_id}/cases:
+    get:
+      tags:
+      - benchmarks
+      summary: Download link for every graded answer of a run (gzipped JSON lines)
+      operationId: cases_api_v1_benchmarks_runs__run_id__cases_get
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CasesDownload'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/benchmarks/runs/{run_id}/cases/file:
+    get:
+      tags:
+      - benchmarks
+      summary: Stream the per-case results file (local storage; S3 serves it directly)
+      operationId: cases_file_api_v1_benchmarks_runs__run_id__cases_file_get
+      parameters:
+      - name: run_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Run Id
+      responses:
+        '200':
+          description: Successful Response
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/alerts:
+    get:
+      tags:
+      - alerts
+      summary: Health and routing alerts
+      operationId: list_alerts_api_v1_alerts_get
+      parameters:
+      - name: include_acknowledged
+        in: query
+        required: false
+        schema:
+          type: boolean
+          default: false
+          title: Include Acknowledged
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AlertList'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/alerts/{alert_id}/ack:
+    post:
+      tags:
+      - alerts
+      summary: Acknowledge an alert
+      operationId: ack_api_v1_alerts__alert_id__ack_post
+      parameters:
+      - name: alert_id
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Alert Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /api/v1/alerts/ack-all:
+    post:
+      tags:
+      - alerts
+      summary: Acknowledge every open alert
+      operationId: ack_all_api_v1_alerts_ack_all_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Message'
+  /api/v1/audit:
+    get:
+      tags:
+      - audit
+      summary: Append-only audit log
+      operationId: list_audit_api_v1_audit_get
+      parameters:
+      - name: cursor
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cursor
+      - name: limit
+        in: query
+        required: false
+        schema:
+          type: integer
+          maximum: 200
+          minimum: 1
+          default: 50
+          title: Limit
+      - name: action
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Action
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Page_AuditOut_'
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+  /healthz:
+    get:
+      tags:
+      - system
+      summary: Liveness
+      operationId: healthz_healthz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties:
+                  type: string
+                type: object
+                title: Response Healthz Healthz Get
+  /readyz:
+    get:
+      tags:
+      - system
+      summary: 'Readiness: Postgres and Redis reachable'
+      operationId: readyz_readyz_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Readyz Readyz Get
+  /api/v1/system:
+    get:
+      tags:
+      - system
+      summary: Deployment configuration
+      operationId: system_api_v1_system_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SystemInfo'
+components:
+  schemas:
+    AlertList:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AlertOut'
+          type: array
+          title: Items
+        unacknowledged:
+          type: integer
+          title: Unacknowledged
+      type: object
+      required:
+      - items
+      - unacknowledged
+      title: AlertList
+    AlertOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        kind:
+          type: string
+          title: Kind
+        severity:
+          type: string
+          title: Severity
+        message:
+          type: string
+          title: Message
+        acknowledged:
+          type: boolean
+          title: Acknowledged
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - kind
+      - severity
+      - message
+      - acknowledged
+      - created_at
+      title: AlertOut
+    AnalysisOut:
+      properties:
+        task:
+          type: string
+          title: Task
+        complexity:
+          type: integer
+          title: Complexity
+        band:
+          type: string
+          title: Band
+        signals:
+          items:
+            type: string
+          type: array
+          title: Signals
+        input_tokens:
+          type: integer
+          title: Input Tokens
+        output_tokens:
+          type: integer
+          title: Output Tokens
+        needs_tools:
+          type: boolean
+          title: Needs Tools
+        needs_vision:
+          type: boolean
+          title: Needs Vision
+        needs_json:
+          type: boolean
+          title: Needs Json
+      type: object
+      required:
+      - task
+      - complexity
+      - band
+      - signals
+      - input_tokens
+      - output_tokens
+      - needs_tools
+      - needs_vision
+      - needs_json
+      title: AnalysisOut
+    AuditOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        at:
+          type: string
+          format: date-time
+          title: At
+        actor_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Actor Id
+        actor_email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Actor Email
+        action:
+          type: string
+          title: Action
+        target_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Type
+        target_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Target Id
+        details:
+          additionalProperties: true
+          type: object
+          title: Details
+        ip:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ip
+      type: object
+      required:
+      - id
+      - at
+      - actor_id
+      - actor_email
+      - action
+      - target_type
+      - target_id
+      - details
+      - ip
+      title: AuditOut
+    BreakdownRow:
+      properties:
+        key:
+          type: string
+          title: Key
+        label:
+          type: string
+          title: Label
+        requests:
+          type: integer
+          title: Requests
+        cost_usd:
+          type: number
+          title: Cost Usd
+        baseline_cost_usd:
+          type: number
+          title: Baseline Cost Usd
+        savings_usd:
+          type: number
+          title: Savings Usd
+        share:
+          type: number
+          title: Share
+        avg_latency_ms:
+          type: number
+          title: Avg Latency Ms
+      type: object
+      required:
+      - key
+      - label
+      - requests
+      - cost_usd
+      - baseline_cost_usd
+      - savings_usd
+      - share
+      - avg_latency_ms
+      title: BreakdownRow
+    CasesDownload:
+      properties:
+        url:
+          type: string
+          title: Url
+          description: Presigned S3 link, or an API path that streams the file
+        filename:
+          type: string
+          title: Filename
+        rows:
+          type: integer
+          title: Rows
+        bytes:
+          type: integer
+          title: Bytes
+      type: object
+      required:
+      - url
+      - filename
+      - rows
+      - bytes
+      title: CasesDownload
+    DecisionDetail:
+      properties:
+        id:
+          type: integer
+          title: Id
+        request_id:
+          type: string
+          title: Request Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        project_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Project Name
+        source:
+          type: string
+          title: Source
+        requested_model:
+          type: string
+          title: Requested Model
+        policy_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Policy Name
+        strategy:
+          type: string
+          title: Strategy
+        task:
+          type: string
+          title: Task
+        complexity:
+          type: integer
+          title: Complexity
+        selected_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Selected Model
+        final_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Final Model
+        attempts:
+          type: integer
+          title: Attempts
+        floor_relaxed:
+          type: boolean
+          title: Floor Relaxed
+        estimated_cost_usd:
+          type: number
+          title: Estimated Cost Usd
+        baseline_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Model
+        baseline_cost_usd:
+          type: number
+          title: Baseline Cost Usd
+        actual_cost_usd:
+          type: number
+          title: Actual Cost Usd
+        cost_source:
+          type: string
+          title: Cost Source
+        input_tokens:
+          type: integer
+          title: Input Tokens
+        output_tokens:
+          type: integer
+          title: Output Tokens
+        status:
+          type: string
+          title: Status
+        error_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error Code
+        http_status:
+          type: integer
+          title: Http Status
+        latency_ms:
+          type: integer
+          title: Latency Ms
+        upstream_ms:
+          type: integer
+          title: Upstream Ms
+        routing_us:
+          type: integer
+          title: Routing Us
+        stream:
+          type: boolean
+          title: Stream
+        feedback:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Feedback
+        signals:
+          items:
+            type: string
+          type: array
+          title: Signals
+        input_tokens_est:
+          type: integer
+          title: Input Tokens Est
+        reason:
+          type: string
+          title: Reason
+        fallback_chain:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Fallback Chain
+        candidates:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Candidates
+        upstream_request_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Upstream Request Id
+      type: object
+      required:
+      - id
+      - request_id
+      - created_at
+      - project_id
+      - source
+      - requested_model
+      - policy_name
+      - strategy
+      - task
+      - complexity
+      - selected_model
+      - final_model
+      - attempts
+      - floor_relaxed
+      - estimated_cost_usd
+      - baseline_model
+      - baseline_cost_usd
+      - actual_cost_usd
+      - cost_source
+      - input_tokens
+      - output_tokens
+      - status
+      - error_code
+      - http_status
+      - latency_ms
+      - upstream_ms
+      - routing_us
+      - stream
+      - signals
+      - input_tokens_est
+      - reason
+      - fallback_chain
+      - candidates
+      - upstream_request_id
+      title: DecisionDetail
+    DecisionOut:
+      properties:
+        id:
+          type: integer
+          title: Id
+        request_id:
+          type: string
+          title: Request Id
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        project_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Project Name
+        source:
+          type: string
+          title: Source
+        requested_model:
+          type: string
+          title: Requested Model
+        policy_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Policy Name
+        strategy:
+          type: string
+          title: Strategy
+        task:
+          type: string
+          title: Task
+        complexity:
+          type: integer
+          title: Complexity
+        selected_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Selected Model
+        final_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Final Model
+        attempts:
+          type: integer
+          title: Attempts
+        floor_relaxed:
+          type: boolean
+          title: Floor Relaxed
+        estimated_cost_usd:
+          type: number
+          title: Estimated Cost Usd
+        baseline_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Model
+        baseline_cost_usd:
+          type: number
+          title: Baseline Cost Usd
+        actual_cost_usd:
+          type: number
+          title: Actual Cost Usd
+        cost_source:
+          type: string
+          title: Cost Source
+        input_tokens:
+          type: integer
+          title: Input Tokens
+        output_tokens:
+          type: integer
+          title: Output Tokens
+        status:
+          type: string
+          title: Status
+        error_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error Code
+        http_status:
+          type: integer
+          title: Http Status
+        latency_ms:
+          type: integer
+          title: Latency Ms
+        upstream_ms:
+          type: integer
+          title: Upstream Ms
+        routing_us:
+          type: integer
+          title: Routing Us
+        stream:
+          type: boolean
+          title: Stream
+        feedback:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Feedback
+      type: object
+      required:
+      - id
+      - request_id
+      - created_at
+      - project_id
+      - source
+      - requested_model
+      - policy_name
+      - strategy
+      - task
+      - complexity
+      - selected_model
+      - final_model
+      - attempts
+      - floor_relaxed
+      - estimated_cost_usd
+      - baseline_model
+      - baseline_cost_usd
+      - actual_cost_usd
+      - cost_source
+      - input_tokens
+      - output_tokens
+      - status
+      - error_code
+      - http_status
+      - latency_ms
+      - upstream_ms
+      - routing_us
+      - stream
+      title: DecisionOut
+    FeedbackIn:
+      properties:
+        request_id:
+          type: string
+          maxLength: 64
+          minLength: 4
+          title: Request Id
+        score:
+          type: integer
+          title: Score
+          description: 1 (good answer) or -1 (bad answer)
+        comment:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Comment
+      type: object
+      required:
+      - request_id
+      - score
+      title: FeedbackIn
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    KeyCreated:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        project_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Project Name
+        name:
+          type: string
+          title: Name
+        prefix:
+          type: string
+          title: Prefix
+        display:
+          type: string
+          title: Display
+          description: 'Safe identifier: tsr_<prefix>_****'
+        rpm_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rpm Limit
+        concurrency_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Concurrency Limit
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        last_used_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Used At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        key:
+          type: string
+          title: Key
+          description: The full key. Shown once; store it now
+      type: object
+      required:
+      - id
+      - project_id
+      - name
+      - prefix
+      - display
+      - rpm_limit
+      - concurrency_limit
+      - expires_at
+      - revoked_at
+      - last_used_at
+      - created_at
+      - key
+      title: KeyCreated
+    KeyIn:
+      properties:
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        rpm_limit:
+          anyOf:
+          - type: integer
+            maximum: 1000000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Rpm Limit
+        concurrency_limit:
+          anyOf:
+          - type: integer
+            maximum: 10000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Concurrency Limit
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+      type: object
+      required:
+      - project_id
+      - name
+      title: KeyIn
+    KeyOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        project_id:
+          type: string
+          format: uuid
+          title: Project Id
+        project_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Project Name
+        name:
+          type: string
+          title: Name
+        prefix:
+          type: string
+          title: Prefix
+        display:
+          type: string
+          title: Display
+          description: 'Safe identifier: tsr_<prefix>_****'
+        rpm_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Rpm Limit
+        concurrency_limit:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Concurrency Limit
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+        revoked_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Revoked At
+        last_used_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Used At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - project_id
+      - name
+      - prefix
+      - display
+      - rpm_limit
+      - concurrency_limit
+      - expires_at
+      - revoked_at
+      - last_used_at
+      - created_at
+      title: KeyOut
+    KeyUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        rpm_limit:
+          anyOf:
+          - type: integer
+            maximum: 1000000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Rpm Limit
+        concurrency_limit:
+          anyOf:
+          - type: integer
+            maximum: 10000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Concurrency Limit
+        expires_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Expires At
+      type: object
+      title: KeyUpdate
+    LoginRequest:
+      properties:
+        email:
+          type: string
+          maxLength: 320
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+        password:
+          type: string
+          maxLength: 256
+          minLength: 1
+          title: Password
+      type: object
+      required:
+      - email
+      - password
+      title: LoginRequest
+    Message:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+          default: true
+        message:
+          type: string
+          title: Message
+          default: ''
+      type: object
+      title: Message
+    ModelHealth:
+      properties:
+        model:
+          type: string
+          title: Model
+        endpoint:
+          type: string
+          title: Endpoint
+        tier:
+          type: string
+          title: Tier
+        state:
+          type: string
+          title: State
+          description: closed (healthy), open (skipped) or half_open (probing)
+        p50_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: P50 Ms
+        p95_ms:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: P95 Ms
+        error_rate:
+          type: number
+          title: Error Rate
+        samples:
+          type: integer
+          title: Samples
+        counts:
+          additionalProperties:
+            type: integer
+          type: object
+          title: Counts
+        latency_prior_ms:
+          type: integer
+          title: Latency Prior Ms
+      type: object
+      required:
+      - model
+      - endpoint
+      - tier
+      - state
+      - p50_ms
+      - p95_ms
+      - error_rate
+      - samples
+      - counts
+      - latency_prior_ms
+      title: ModelHealth
+    ModelIn:
+      properties:
+        alias:
+          type: string
+          maxLength: 120
+          minLength: 1
+          pattern: ^[A-Za-z0-9._/-]+$
+          title: Alias
+        provider_id:
+          type: string
+          format: uuid
+          title: Provider Id
+        upstream_model:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Upstream Model
+        description:
+          type: string
+          maxLength: 500
+          title: Description
+          default: ''
+        tier:
+          type: string
+          enum:
+          - fast
+          - low-cost
+          - advanced
+          - local
+          title: Tier
+          default: advanced
+        tokenizer:
+          type: string
+          maxLength: 32
+          title: Tokenizer
+          default: o200k_base
+        context_window:
+          type: integer
+          maximum: 10000000.0
+          minimum: 256.0
+          title: Context Window
+          default: 128000
+        max_output_tokens:
+          type: integer
+          maximum: 1000000.0
+          minimum: 1.0
+          title: Max Output Tokens
+          default: 16384
+        input_per_m:
+          anyOf:
+          - type: number
+            maximum: 100000.0
+            minimum: 0.0
+          - type: string
+          title: Input Per M
+          description: USD per 1M input tokens
+          default: '0'
+        output_per_m:
+          anyOf:
+          - type: number
+            maximum: 100000.0
+            minimum: 0.0
+          - type: string
+          title: Output Per M
+          description: USD per 1M output tokens
+          default: '0'
+        supports_tools:
+          type: boolean
+          title: Supports Tools
+          default: true
+        supports_vision:
+          type: boolean
+          title: Supports Vision
+          default: false
+        supports_json:
+          type: boolean
+          title: Supports Json
+          default: true
+        latency_prior_ms:
+          type: integer
+          maximum: 600000.0
+          minimum: 1.0
+          title: Latency Prior Ms
+          default: 1000
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+      type: object
+      required:
+      - alias
+      - provider_id
+      - upstream_model
+      title: ModelIn
+    ModelOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        alias:
+          type: string
+          title: Alias
+        provider_id:
+          type: string
+          format: uuid
+          title: Provider Id
+        provider_name:
+          type: string
+          title: Provider Name
+        provider_kind:
+          type: string
+          title: Provider Kind
+        upstream_model:
+          type: string
+          title: Upstream Model
+        description:
+          type: string
+          title: Description
+        tier:
+          type: string
+          title: Tier
+        context_window:
+          type: integer
+          title: Context Window
+        max_output_tokens:
+          type: integer
+          title: Max Output Tokens
+        input_per_m:
+          type: string
+          title: Input Per M
+        output_per_m:
+          type: string
+          title: Output Per M
+        supports_tools:
+          type: boolean
+          title: Supports Tools
+        supports_vision:
+          type: boolean
+          title: Supports Vision
+        supports_json:
+          type: boolean
+          title: Supports Json
+        latency_prior_ms:
+          type: integer
+          title: Latency Prior Ms
+        enabled:
+          type: boolean
+          title: Enabled
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - alias
+      - provider_id
+      - provider_name
+      - provider_kind
+      - upstream_model
+      - description
+      - tier
+      - context_window
+      - max_output_tokens
+      - input_per_m
+      - output_per_m
+      - supports_tools
+      - supports_vision
+      - supports_json
+      - latency_prior_ms
+      - enabled
+      - created_at
+      title: ModelOut
+    ModelUpdate:
+      properties:
+        upstream_model:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Upstream Model
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        tier:
+          anyOf:
+          - type: string
+            enum:
+            - fast
+            - low-cost
+            - advanced
+            - local
+          - type: 'null'
+          title: Tier
+        context_window:
+          anyOf:
+          - type: integer
+            maximum: 10000000.0
+            minimum: 256.0
+          - type: 'null'
+          title: Context Window
+        max_output_tokens:
+          anyOf:
+          - type: integer
+            maximum: 1000000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Output Tokens
+        input_per_m:
+          anyOf:
+          - type: number
+            maximum: 100000.0
+            minimum: 0.0
+          - type: string
+          - type: 'null'
+          title: Input Per M
+        output_per_m:
+          anyOf:
+          - type: number
+            maximum: 100000.0
+            minimum: 0.0
+          - type: string
+          - type: 'null'
+          title: Output Per M
+        supports_tools:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Supports Tools
+        supports_vision:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Supports Vision
+        supports_json:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Supports Json
+        latency_prior_ms:
+          anyOf:
+          - type: integer
+            maximum: 600000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Latency Prior Ms
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+      type: object
+      title: ModelUpdate
+    Overview:
+      properties:
+        range:
+          type: string
+          title: Range
+        since:
+          type: string
+          format: date-time
+          title: Since
+        totals:
+          $ref: '#/components/schemas/Totals'
+        previous:
+          $ref: '#/components/schemas/Totals'
+        routing_overhead_us_p50:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Routing Overhead Us P50
+        feedback_positive_rate:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Feedback Positive Rate
+      type: object
+      required:
+      - range
+      - since
+      - totals
+      - previous
+      title: Overview
+    Page_AuditOut_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/AuditOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Pass as ?cursor= to fetch the next page
+      type: object
+      required:
+      - items
+      title: Page[AuditOut]
+    Page_DecisionOut_:
+      properties:
+        items:
+          items:
+            $ref: '#/components/schemas/DecisionOut'
+          type: array
+          title: Items
+        next_cursor:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Next Cursor
+          description: Pass as ?cursor= to fetch the next page
+      type: object
+      required:
+      - items
+      title: Page[DecisionOut]
+    PasswordChange:
+      properties:
+        current_password:
+          type: string
+          maxLength: 256
+          minLength: 1
+          title: Current Password
+        new_password:
+          type: string
+          maxLength: 256
+          minLength: 10
+          title: New Password
+      type: object
+      required:
+      - current_password
+      - new_password
+      title: PasswordChange
+    PolicyIn:
+      properties:
+        name:
+          type: string
+          pattern: ^[a-z0-9][a-z0-9-]{0,62}$
+          title: Name
+          description: Lowercase; clients send model='auto:<name>'
+        description:
+          type: string
+          maxLength: 500
+          title: Description
+          default: ''
+        strategy:
+          type: string
+          enum:
+          - cost
+          - latency
+          - quality
+          - balanced
+          title: Strategy
+          default: balanced
+        weights:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Weights
+        quality_floor:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Quality Floor
+          default: 0.7
+        task_floors:
+          additionalProperties:
+            type: number
+          type: object
+          title: Task Floors
+        hard_floor_boost:
+          type: number
+          maximum: 0.5
+          minimum: 0.0
+          title: Hard Floor Boost
+          default: 0.1
+        max_latency_ms:
+          anyOf:
+          - type: integer
+            maximum: 600000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Latency Ms
+        max_cost_usd:
+          anyOf:
+          - type: number
+            maximum: 1000.0
+            exclusiveMinimum: 0.0
+          - type: string
+          - type: 'null'
+          title: Max Cost Usd
+        allowed_models:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Allowed Models
+        excluded_models:
+          items:
+            type: string
+          type: array
+          title: Excluded Models
+        allow_fallback:
+          type: boolean
+          title: Allow Fallback
+          default: true
+        max_attempts:
+          type: integer
+          maximum: 6.0
+          minimum: 1.0
+          title: Max Attempts
+          default: 3
+        budget_downgrade:
+          type: boolean
+          title: Budget Downgrade
+          default: false
+        on_no_eligible:
+          type: string
+          enum:
+          - best_quality
+          - reject
+          title: On No Eligible
+          default: best_quality
+        baseline_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Model
+        is_default:
+          type: boolean
+          title: Is Default
+          default: false
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+      type: object
+      required:
+      - name
+      title: PolicyIn
+    PolicyOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        description:
+          type: string
+          title: Description
+        strategy:
+          type: string
+          title: Strategy
+        weights:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Weights
+        effective_weights:
+          additionalProperties:
+            type: number
+          type: object
+          title: Effective Weights
+        quality_floor:
+          type: number
+          title: Quality Floor
+        task_floors:
+          additionalProperties:
+            type: number
+          type: object
+          title: Task Floors
+        hard_floor_boost:
+          type: number
+          title: Hard Floor Boost
+        max_latency_ms:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Latency Ms
+        max_cost_usd:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Max Cost Usd
+        allowed_models:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Allowed Models
+        excluded_models:
+          items:
+            type: string
+          type: array
+          title: Excluded Models
+        allow_fallback:
+          type: boolean
+          title: Allow Fallback
+        max_attempts:
+          type: integer
+          title: Max Attempts
+        budget_downgrade:
+          type: boolean
+          title: Budget Downgrade
+        on_no_eligible:
+          type: string
+          title: On No Eligible
+        baseline_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Model
+        is_default:
+          type: boolean
+          title: Is Default
+        enabled:
+          type: boolean
+          title: Enabled
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        requests_24h:
+          type: integer
+          title: Requests 24H
+          default: 0
+      type: object
+      required:
+      - id
+      - name
+      - description
+      - strategy
+      - weights
+      - quality_floor
+      - task_floors
+      - hard_floor_boost
+      - max_latency_ms
+      - max_cost_usd
+      - allowed_models
+      - excluded_models
+      - allow_fallback
+      - max_attempts
+      - budget_downgrade
+      - on_no_eligible
+      - baseline_model
+      - is_default
+      - enabled
+      - created_at
+      title: PolicyOut
+    PolicyUpdate:
+      properties:
+        description:
+          anyOf:
+          - type: string
+            maxLength: 500
+          - type: 'null'
+          title: Description
+        strategy:
+          anyOf:
+          - type: string
+            enum:
+            - cost
+            - latency
+            - quality
+            - balanced
+          - type: 'null'
+          title: Strategy
+        weights:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Weights
+        quality_floor:
+          anyOf:
+          - type: number
+            maximum: 1.0
+            minimum: 0.0
+          - type: 'null'
+          title: Quality Floor
+        task_floors:
+          anyOf:
+          - additionalProperties:
+              type: number
+            type: object
+          - type: 'null'
+          title: Task Floors
+        hard_floor_boost:
+          anyOf:
+          - type: number
+            maximum: 0.5
+            minimum: 0.0
+          - type: 'null'
+          title: Hard Floor Boost
+        max_latency_ms:
+          anyOf:
+          - type: integer
+            maximum: 600000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Latency Ms
+        max_cost_usd:
+          anyOf:
+          - type: number
+            maximum: 1000.0
+            exclusiveMinimum: 0.0
+          - type: string
+          - type: 'null'
+          title: Max Cost Usd
+        allowed_models:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Allowed Models
+        excluded_models:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Excluded Models
+        allow_fallback:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Allow Fallback
+        max_attempts:
+          anyOf:
+          - type: integer
+            maximum: 6.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Attempts
+        budget_downgrade:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Budget Downgrade
+        on_no_eligible:
+          anyOf:
+          - type: string
+            enum:
+            - best_quality
+            - reject
+          - type: 'null'
+          title: On No Eligible
+        baseline_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Model
+        is_default:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Default
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+      type: object
+      title: PolicyUpdate
+    ProjectIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        description:
+          type: string
+          maxLength: 2000
+          title: Description
+          default: ''
+        team_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Team Id
+        default_policy:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Default Policy
+          description: Routing policy for model='auto'; null = gateway default
+      type: object
+      required:
+      - name
+      title: ProjectIn
+    ProjectOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        slug:
+          type: string
+          title: Slug
+        description:
+          type: string
+          title: Description
+        team_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Team Id
+        team_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Team Name
+        default_policy:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Default Policy
+        archived:
+          type: boolean
+          title: Archived
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        key_count:
+          type: integer
+          title: Key Count
+          default: 0
+      type: object
+      required:
+      - id
+      - name
+      - slug
+      - description
+      - team_id
+      - archived
+      - created_at
+      title: ProjectOut
+    ProjectUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Description
+        team_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Team Id
+        default_policy:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Default Policy
+        archived:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Archived
+      type: object
+      title: ProjectUpdate
+    ProviderIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        kind:
+          type: string
+          enum:
+          - openai
+          - anthropic
+          - tokenshield
+          title: Kind
+        base_url:
+          type: string
+          maxLength: 2083
+          minLength: 1
+          format: uri
+          title: Base Url
+        api_key:
+          anyOf:
+          - type: string
+            maxLength: 4096
+          - type: 'null'
+          title: Api Key
+          description: Write-only; sealed at rest
+        timeout_s:
+          anyOf:
+          - type: number
+            maximum: 600.0
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Timeout S
+        simulated:
+          type: boolean
+          title: Simulated
+          description: 'The mock LLM: may receive benchmark oracle annotations'
+          default: false
+        enabled:
+          type: boolean
+          title: Enabled
+          default: true
+      type: object
+      required:
+      - name
+      - kind
+      - base_url
+      title: ProviderIn
+    ProviderOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        kind:
+          type: string
+          title: Kind
+        base_url:
+          type: string
+          title: Base Url
+        has_key:
+          type: boolean
+          title: Has Key
+        key_hint:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Key Hint
+        timeout_s:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Timeout S
+        simulated:
+          type: boolean
+          title: Simulated
+        enabled:
+          type: boolean
+          title: Enabled
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        model_count:
+          type: integer
+          title: Model Count
+          default: 0
+      type: object
+      required:
+      - id
+      - name
+      - kind
+      - base_url
+      - has_key
+      - key_hint
+      - timeout_s
+      - simulated
+      - enabled
+      - created_at
+      title: ProviderOut
+    ProviderTest:
+      properties:
+        ok:
+          type: boolean
+          title: Ok
+        latency_ms:
+          type: integer
+          title: Latency Ms
+        message:
+          type: string
+          title: Message
+      type: object
+      required:
+      - ok
+      - latency_ms
+      - message
+      title: ProviderTest
+    ProviderUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        base_url:
+          anyOf:
+          - type: string
+            maxLength: 2083
+            minLength: 1
+            format: uri
+          - type: 'null'
+          title: Base Url
+        api_key:
+          anyOf:
+          - type: string
+            maxLength: 4096
+          - type: 'null'
+          title: Api Key
+          description: Empty string clears the key
+        timeout_s:
+          anyOf:
+          - type: number
+            maximum: 600.0
+            exclusiveMinimum: 0.0
+          - type: 'null'
+          title: Timeout S
+        enabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Enabled
+      type: object
+      title: ProviderUpdate
+    QualityCell:
+      properties:
+        model_alias:
+          type: string
+          title: Model Alias
+        task:
+          type: string
+          title: Task
+        band:
+          type: string
+          title: Band
+        score:
+          type: number
+          title: Score
+        samples:
+          type: integer
+          title: Samples
+        source:
+          type: string
+          title: Source
+        updated_at:
+          type: string
+          format: date-time
+          title: Updated At
+      type: object
+      required:
+      - model_alias
+      - task
+      - band
+      - score
+      - samples
+      - source
+      - updated_at
+      title: QualityCell
+    QualityOverride:
+      properties:
+        model_alias:
+          type: string
+          title: Model Alias
+        task:
+          type: string
+          title: Task
+        band:
+          type: string
+          enum:
+          - low
+          - high
+          title: Band
+        score:
+          type: number
+          maximum: 1.0
+          minimum: 0.0
+          title: Score
+      type: object
+      required:
+      - model_alias
+      - task
+      - band
+      - score
+      title: QualityOverride
+    ResultOut:
+      properties:
+        target_type:
+          type: string
+          title: Target Type
+        target:
+          type: string
+          title: Target
+        task:
+          type: string
+          title: Task
+        band:
+          type: string
+          title: Band
+        cases:
+          type: integer
+          title: Cases
+        passed:
+          type: integer
+          title: Passed
+        score:
+          type: number
+          title: Score
+        cost_usd:
+          type: number
+          title: Cost Usd
+        latency_ms_avg:
+          type: number
+          title: Latency Ms Avg
+        model_mix:
+          additionalProperties: true
+          type: object
+          title: Model Mix
+      type: object
+      required:
+      - target_type
+      - target
+      - task
+      - band
+      - cases
+      - passed
+      - score
+      - cost_usd
+      - latency_ms_avg
+      - model_mix
+      title: ResultOut
+    RunDetail:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        status:
+          type: string
+          title: Status
+        suite_version:
+          type: string
+          title: Suite Version
+        models:
+          items:
+            type: string
+          type: array
+          title: Models
+        policies:
+          items:
+            type: string
+          type: array
+          title: Policies
+        summary:
+          additionalProperties: true
+          type: object
+          title: Summary
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+        results:
+          items:
+            $ref: '#/components/schemas/ResultOut'
+          type: array
+          title: Results
+          default: []
+      type: object
+      required:
+      - id
+      - status
+      - suite_version
+      - models
+      - policies
+      - summary
+      - error
+      - created_at
+      - started_at
+      - finished_at
+      title: RunDetail
+    RunIn:
+      properties:
+        models:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Models
+          description: Model aliases; null = every enabled model
+        policies:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Policies
+          description: Policies; null = every enabled policy, [] = none
+      type: object
+      title: RunIn
+    RunOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        status:
+          type: string
+          title: Status
+        suite_version:
+          type: string
+          title: Suite Version
+        models:
+          items:
+            type: string
+          type: array
+          title: Models
+        policies:
+          items:
+            type: string
+          type: array
+          title: Policies
+        summary:
+          additionalProperties: true
+          type: object
+          title: Summary
+        error:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Error
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        started_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Started At
+        finished_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Finished At
+      type: object
+      required:
+      - id
+      - status
+      - suite_version
+      - models
+      - policies
+      - summary
+      - error
+      - created_at
+      - started_at
+      - finished_at
+      title: RunOut
+    SeriesPoint:
+      properties:
+        t:
+          type: string
+          format: date-time
+          title: T
+        requests:
+          type: integer
+          title: Requests
+        cost_usd:
+          type: number
+          title: Cost Usd
+        baseline_cost_usd:
+          type: number
+          title: Baseline Cost Usd
+        fallbacks:
+          type: integer
+          title: Fallbacks
+        failed:
+          type: integer
+          title: Failed
+      type: object
+      required:
+      - t
+      - requests
+      - cost_usd
+      - baseline_cost_usd
+      - fallbacks
+      - failed
+      title: SeriesPoint
+    SessionOut:
+      properties:
+        user:
+          $ref: '#/components/schemas/UserOut'
+        session_token:
+          type: string
+          title: Session Token
+          description: Bearer token for API clients; browsers use the cookie
+        expires_in_s:
+          type: integer
+          title: Expires In S
+      type: object
+      required:
+      - user
+      - session_token
+      - expires_in_s
+      title: SessionOut
+    SimulateIn:
+      properties:
+        model:
+          type: string
+          title: Model
+          description: auto, auto:<policy> or a model alias
+          default: auto
+        messages:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          maxItems: 200
+          minItems: 1
+          title: Messages
+        project_id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Project Id
+        max_tokens:
+          anyOf:
+          - type: integer
+            maximum: 1000000.0
+            minimum: 1.0
+          - type: 'null'
+          title: Max Tokens
+        tools:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - type: 'null'
+          title: Tools
+        response_format:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Response Format
+        task:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Task
+          description: Override the detected task
+        complexity:
+          anyOf:
+          - type: integer
+            maximum: 5.0
+            minimum: 1.0
+          - type: 'null'
+          title: Complexity
+      type: object
+      required:
+      - messages
+      title: SimulateIn
+    SimulateOut:
+      properties:
+        policy:
+          type: string
+          title: Policy
+        strategy:
+          type: string
+          title: Strategy
+        passthrough:
+          type: boolean
+          title: Passthrough
+        floor:
+          type: number
+          title: Floor
+        floor_relaxed:
+          type: boolean
+          title: Floor Relaxed
+        analysis:
+          $ref: '#/components/schemas/AnalysisOut'
+        selected:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Selected
+        baseline_model:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Baseline Model
+        baseline_cost_usd:
+          type: number
+          title: Baseline Cost Usd
+        estimated_cost_usd:
+          type: number
+          title: Estimated Cost Usd
+        estimated_savings_pct:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Estimated Savings Pct
+        candidates:
+          items:
+            additionalProperties: true
+            type: object
+          type: array
+          title: Candidates
+        routing_us:
+          type: integer
+          title: Routing Us
+      type: object
+      required:
+      - policy
+      - strategy
+      - passthrough
+      - floor
+      - floor_relaxed
+      - analysis
+      - selected
+      - baseline_model
+      - baseline_cost_usd
+      - estimated_cost_usd
+      - estimated_savings_pct
+      - candidates
+      - routing_us
+      title: SimulateOut
+    SuiteCase:
+      properties:
+        id:
+          type: string
+          title: Id
+        task:
+          type: string
+          title: Task
+        difficulty:
+          type: integer
+          title: Difficulty
+        grader:
+          type: string
+          title: Grader
+        prompt:
+          type: string
+          title: Prompt
+      type: object
+      required:
+      - id
+      - task
+      - difficulty
+      - grader
+      - prompt
+      title: SuiteCase
+    SystemInfo:
+      properties:
+        version:
+          type: string
+          title: Version
+        environment:
+          type: string
+          title: Environment
+        cloud:
+          type: string
+          title: Cloud
+        key_mode:
+          type: string
+          title: Key Mode
+        storage:
+          type: string
+          title: Storage
+        breaker_failure_threshold:
+          type: integer
+          title: Breaker Failure Threshold
+        breaker_cooldown_s:
+          type: integer
+          title: Breaker Cooldown S
+        default_policy:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Default Policy
+        policies:
+          type: integer
+          title: Policies
+          default: 0
+        projects:
+          type: integer
+          title: Projects
+        models:
+          type: integer
+          title: Models
+        active_keys:
+          type: integer
+          title: Active Keys
+        checks:
+          additionalProperties: true
+          type: object
+          title: Checks
+      type: object
+      required:
+      - version
+      - environment
+      - cloud
+      - key_mode
+      - storage
+      - breaker_failure_threshold
+      - breaker_cooldown_s
+      - projects
+      - models
+      - active_keys
+      - checks
+      title: SystemInfo
+    TeamIn:
+      properties:
+        name:
+          type: string
+          maxLength: 120
+          minLength: 1
+          title: Name
+        description:
+          type: string
+          maxLength: 2000
+          title: Description
+          default: ''
+      type: object
+      required:
+      - name
+      title: TeamIn
+    TeamOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        name:
+          type: string
+          title: Name
+        slug:
+          type: string
+          title: Slug
+        description:
+          type: string
+          title: Description
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+        project_count:
+          type: integer
+          title: Project Count
+          default: 0
+      type: object
+      required:
+      - id
+      - name
+      - slug
+      - description
+      - created_at
+      title: TeamOut
+    TeamUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 120
+            minLength: 1
+          - type: 'null'
+          title: Name
+        description:
+          anyOf:
+          - type: string
+            maxLength: 2000
+          - type: 'null'
+          title: Description
+      type: object
+      title: TeamUpdate
+    Totals:
+      properties:
+        requests:
+          type: integer
+          title: Requests
+          default: 0
+        succeeded:
+          type: integer
+          title: Succeeded
+          default: 0
+        failed:
+          type: integer
+          title: Failed
+          default: 0
+        fallbacks:
+          type: integer
+          title: Fallbacks
+          default: 0
+        cost_usd:
+          type: number
+          title: Cost Usd
+          default: 0
+        baseline_cost_usd:
+          type: number
+          title: Baseline Cost Usd
+          default: 0
+        savings_usd:
+          type: number
+          title: Savings Usd
+          default: 0
+        savings_pct:
+          type: number
+          title: Savings Pct
+          default: 0
+        avg_latency_ms:
+          type: number
+          title: Avg Latency Ms
+          default: 0
+        fallback_rate:
+          type: number
+          title: Fallback Rate
+          default: 0
+        input_tokens:
+          type: integer
+          title: Input Tokens
+          default: 0
+        output_tokens:
+          type: integer
+          title: Output Tokens
+          default: 0
+      type: object
+      title: Totals
+    UserCreate:
+      properties:
+        email:
+          type: string
+          maxLength: 320
+          pattern: ^[^@\s]+@[^@\s]+\.[^@\s]+$
+          title: Email
+        name:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Name
+        role:
+          type: string
+          enum:
+          - owner
+          - admin
+          - viewer
+          title: Role
+          default: viewer
+        password:
+          type: string
+          maxLength: 256
+          minLength: 10
+          title: Password
+      type: object
+      required:
+      - email
+      - name
+      - password
+      title: UserCreate
+    UserOut:
+      properties:
+        id:
+          type: string
+          format: uuid
+          title: Id
+        email:
+          type: string
+          title: Email
+        name:
+          type: string
+          title: Name
+        role:
+          type: string
+          title: Role
+        disabled:
+          type: boolean
+          title: Disabled
+        last_login_at:
+          anyOf:
+          - type: string
+            format: date-time
+          - type: 'null'
+          title: Last Login At
+        created_at:
+          type: string
+          format: date-time
+          title: Created At
+      type: object
+      required:
+      - id
+      - email
+      - name
+      - role
+      - disabled
+      - last_login_at
+      - created_at
+      title: UserOut
+    UserUpdate:
+      properties:
+        name:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Name
+        role:
+          anyOf:
+          - type: string
+            enum:
+            - owner
+            - admin
+            - viewer
+          - type: 'null'
+          title: Role
+        disabled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Disabled
+      type: object
+      title: UserUpdate
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+        input:
+          title: Input
+        ctx:
+          type: object
+          title: Context
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+servers:
+- url: http://localhost:4230
+  description: Local (make up)
