@@ -1,0 +1,338 @@
+# SmartRouter benchmark suite. Each case: task, difficulty 1 (trivial) to 5 (hard), the
+# messages sent to the model, and a deterministic grader. Graders:
+#   exact     normalised answer equals `expected`
+#   choice    the answer contains `expected` and none of the other `choices`
+#   number    the first number in the answer equals `expected` (within `tolerance`)
+#   contains  the answer contains every string in `expected` as a whole word or phrase
+#   json      the answer parses as JSON and has every key/value in `expected`
+#   regex     the answer matches the regex in `expected`
+version: "2026.11"
+cases:
+  # classification
+  - {id: cls-1, task: classification, difficulty: 1, grader: choice, choices: [positive, negative], expected: positive,
+     prompt: "Classify the sentiment as positive or negative. Answer with one word.\n\nReview: I love this product, it works perfectly."}
+  - {id: cls-2, task: classification, difficulty: 1, grader: choice, choices: [spam, ham], expected: spam,
+     prompt: "Is this message spam or ham? One word.\n\nCONGRATULATIONS! You won a free cruise. Click now to claim."}
+  - {id: cls-3, task: classification, difficulty: 2, grader: choice, choices: [billing, technical, account], expected: billing,
+     prompt: "Categorize the support ticket as billing, technical or account. One word.\n\nI was charged twice for my October invoice."}
+  - {id: cls-4, task: classification, difficulty: 3, grader: choice, choices: [positive, negative, mixed], expected: mixed,
+     prompt: "Label the sentiment as positive, negative or mixed. One word.\n\nThe camera is superb but the battery dies before lunch."}
+  - {id: cls-5, task: classification, difficulty: 3, grader: choice, choices: [urgent, normal, low], expected: urgent,
+     prompt: "Classify the priority as urgent, normal or low. One word.\n\nProduction checkout is returning 500 errors for every customer since 09:00."}
+  - {id: cls-6, task: classification, difficulty: 4, grader: choice, choices: [sarcastic, sincere], expected: sarcastic,
+     prompt: "Is this review sarcastic or sincere? One word.\n\nOh great, another update that deletes my settings. Exactly what I wanted on a Monday."}
+  - {id: cls-7, task: classification, difficulty: 1, grader: choice, choices: [positive, negative], expected: negative,
+     prompt: "Is this review positive or negative? Reply with one word.\n\nTerrible service, the food was cold and the waiter ignored us for twenty minutes."}
+  - {id: cls-8, task: classification, difficulty: 1, grader: choice, choices: [question, statement], expected: question,
+     prompt: "Is the following sentence a question or a statement? One word.\n\nWhat time does the store open on Sundays?"}
+  - {id: cls-9, task: classification, difficulty: 2, grader: choice, choices: [sports, politics, technology], expected: technology,
+     prompt: "Which section does this headline belong in: sports, politics or technology? Reply with the section name.\n\nChipmaker unveils a 2-nanometer processor aimed at thin laptops."}
+  - {id: cls-10, task: classification, difficulty: 2, grader: choice, choices: [billing, technical, account], expected: account,
+     prompt: "Route this support message to billing, technical or account. Reply with the queue name only.\n\nPlease change the email address on my profile to my new work address, jo.park@example.com."}
+  - {id: cls-11, task: classification, difficulty: 2, grader: choice, choices: [english, french, german, spanish], expected: german,
+     prompt: "Which language is this sentence written in? Answer with the language name only.\n\nWir sehen uns morgen am Bahnhof."}
+  - {id: cls-12, task: classification, difficulty: 3, grader: choice, choices: [complaint, inquiry, compliment], expected: inquiry,
+     prompt: "Classify this customer email as complaint, inquiry or compliment. One word.\n\nYour team fixed my issue in ten minutes last week, so I'm hoping you can tell me whether the premium plan includes phone support."}
+  - {id: cls-13, task: classification, difficulty: 3, grader: choice, choices: [cancel, upgrade, downgrade, pause], expected: downgrade,
+     prompt: "Which intent best fits this message: cancel, upgrade, downgrade or pause? One word.\n\nWe still want the service, but the team shrank, so please move us to a cheaper tier with fewer seats."}
+  - {id: cls-14, task: classification, difficulty: 4, grader: choice, choices: [entailment, contradiction, neutral], expected: neutral,
+     prompt: "Given the premise and the hypothesis, answer entailment, contradiction or neutral. One word.\n\nPremise: The museum is closed on Mondays.\nHypothesis: The museum is busy on Tuesdays."}
+  - {id: cls-15, task: classification, difficulty: 4, grader: choice, choices: [positive, negative, neutral], expected: positive,
+     prompt: "What is the overall sentiment here: positive, negative or neutral? One word.\n\nI fully expected to hate the redesign, and honestly I can't say I miss the old layout at all."}
+  - {id: cls-16, task: classification, difficulty: 4, grader: choice, choices: [phishing, legitimate], expected: phishing,
+     prompt: "Our security inbox received this. Is it phishing or legitimate? One word.\n\nFrom: it-support@examp1e-helpdesk.com\nSubject: Mailbox quota exceeded\n\nYour mailbox will be deactivated in 24 hours. Confirm your password at the link below to keep your account active."}
+  - {id: cls-17, task: classification, difficulty: 5, grader: choice, choices: [indemnification, limitation, termination, confidentiality], expected: limitation,
+     prompt: "Which type of contract clause is this: indemnification, limitation, termination or confidentiality? One word.\n\nNeither party's aggregate liability under this Agreement shall exceed the fees paid in the twelve months preceding the claim, except for a party's obligation to defend and hold harmless the other party against third-party claims."}
+  - {id: cls-18, task: classification, difficulty: 5, grader: choice, choices: [iambic, trochaic, anapestic, dactylic], expected: trochaic,
+     prompt: "What is the dominant metrical foot of this line: iambic, trochaic, anapestic or dactylic? One word.\n\nOnce upon a midnight dreary, while I pondered, weak and weary"}
+  - {id: cls-19, task: classification, difficulty: 5, grader: choice, choices: [constant, logarithmic, linear, linearithmic, quadratic], expected: linearithmic,
+     prompt: "Classify the time complexity of this function as constant, logarithmic, linear, linearithmic or quadratic. One word.\n\n```python\ndef f(n):\n    total = 0\n    for i in range(n):\n        j = 1\n        while j < n:\n            total += 1\n            j *= 2\n    return total\n```"}
+  - {id: cls-20, task: classification, difficulty: 5, grader: choice, choices: [valid, invalid], expected: valid,
+     prompt: "Is this argument logically valid or invalid? One word.\n\nNo reptiles have fur. Some pets have fur. Therefore, some pets are not reptiles."}
+  # extraction
+  - {id: ext-1, task: extraction, difficulty: 1, grader: regex, expected: "ana\\.lima@example\\.com",
+     prompt: "Extract the email address from this text. Return only the address.\n\nPlease reply to ana.lima@example.com by Friday."}
+  - {id: ext-2, task: extraction, difficulty: 2, grader: json, expected: {name: "Sam Okafor", amount: 120},
+     prompt: "Extract name and amount as JSON with keys name and amount (number).\n\nSam Okafor paid 120 dollars on 3 October."}
+  - {id: ext-3, task: extraction, difficulty: 2, grader: json, expected: {city: "Pune", date: "2026-11-14"},
+     prompt: "Extract the city and the ISO date as JSON with keys city and date.\n\nThe workshop moves to Pune on 14 November 2026."}
+  - {id: ext-4, task: extraction, difficulty: 3, grader: json, expected: {order_id: "A-7741", items: 3, express: true},
+     prompt: "Return JSON with keys order_id, items (number) and express (boolean).\n\nOrder A-7741: three items, customer upgraded to express delivery after checkout."}
+  - {id: ext-5, task: extraction, difficulty: 4, grader: json, expected: {start: "2026-01-05", end: "2026-01-09", nights: 4},
+     prompt: "From the booking note return JSON with start, end (ISO dates) and nights (number).\n\nArrive Monday 5 Jan 2026, leave the Friday of that week."}
+  - {id: ext-6, task: extraction, difficulty: 5, grader: json, expected: {liable: "supplier", cap_usd: 50000},
+     prompt: "Read the clause and return JSON with liable (customer or supplier) and cap_usd (number).\n\nNotwithstanding clause 9, losses arising from late delivery are borne by the party that dispatched the goods, limited to fifty thousand US dollars in aggregate. The supplier dispatches all goods."}
+  - {id: ext-7, task: extraction, difficulty: 1, grader: regex, expected: "58213",
+     prompt: "Pull out the order number from this message. Reply with just the number.\n\nHi, my order #58213 still hasn't shipped and it's been a week."}
+  - {id: ext-8, task: extraction, difficulty: 1, grader: regex, expected: "https://docs\\.example\\.com/q3-review",
+     prompt: "What is the link in this sentence? Return only the URL.\n\nThe slides are posted at https://docs.example.com/q3-review for anyone who missed the call."}
+  - {id: ext-9, task: extraction, difficulty: 1, grader: regex, expected: "2026-03-17",
+     prompt: "Give me the issue date from this note, formatted YYYY-MM-DD, and nothing else.\n\nThe invoice was issued on 2026-03-17 and is due in 30 days."}
+  - {id: ext-10, task: extraction, difficulty: 2, grader: json, expected: {sku: "TX-209", quantity: 4},
+     prompt: "Return JSON with keys sku (string) and quantity (number).\n\nPlease ship 4 units of SKU TX-209 to the Leeds office by next week."}
+  - {id: ext-11, task: extraction, difficulty: 2, grader: json, expected: {first_name: "Priya", last_name: "Nair"},
+     prompt: "Split the person's name into JSON with string keys first_name and last_name. Leave out titles.\n\nDr. Priya Nair, Head of Research"}
+  - {id: ext-12, task: extraction, difficulty: 3, grader: json, expected: {amount: 1250, currency: "EUR"},
+     prompt: "Return JSON with keys amount (number) and currency (three-letter ISO code).\n\nThe consultant's fee came to one thousand two hundred and fifty euros, VAT included."}
+  - {id: ext-13, task: extraction, difficulty: 3, grader: json, expected: {owner: "Mina", deadline: "2026-02-20"},
+     prompt: "Who owns the vendor contract and when is it due? Answer as JSON with keys owner (first name) and deadline (ISO date).\n\nNotes, 2 Feb 2026: Leo will draft the onboarding doc by Friday. Mina takes the vendor contract, due 20 February 2026. Leo also books the room for the offsite."}
+  - {id: ext-14, task: extraction, difficulty: 3, grader: json, expected: {adults: 4, children: 3},
+     prompt: "Return JSON with keys adults (number) and children (number) for this reservation.\n\nTable for the Garcia family, please: the two of us, our three kids, and my parents are joining too."}
+  - {id: ext-15, task: extraction, difficulty: 4, grader: json, expected: {due_date: "2026-02-14", late: true},
+     prompt: "Return JSON with keys due_date (ISO date) and late (boolean, true if the payment arrived after the due date).\n\nInvoice dated 2026-01-15, payment terms net 30. Paid in full on 2026-02-16."}
+  - {id: ext-16, task: extraction, difficulty: 4, grader: json, expected: {city: "Manchester", postcode: "M4 1HN", country: "GB"},
+     prompt: "Parse this shipping address into JSON with keys city, postcode and country (ISO 3166-1 alpha-2 code).\n\nShip to: Flat 3, 12 Rose Lane, Manchester M4 1HN, United Kingdom"}
+  - {id: ext-17, task: extraction, difficulty: 4, grader: json, expected: {meeting_day: "Thursday", attendees: 4},
+     prompt: "From this email, return JSON with keys meeting_day (weekday name) and attendees (number of people at the meeting).\n\nHi all, we were going to meet Wednesday but Tom can't make it, so let's push to the following day. It'll be me, Tom, Aisha and Ben; Carla is out on leave."}
+  - {id: ext-18, task: extraction, difficulty: 5, grader: json, expected: {notice_days: 90, auto_renews: true},
+     prompt: "Return JSON with keys notice_days (number) and auto_renews (boolean) as they apply to this customer.\n\nThis Agreement renews for successive one-year terms unless either party gives written notice of non-renewal at least sixty days before the end of the then-current term; provided that, if the Customer is a public body, the notice period is ninety days. The Customer is the transit authority of the City of Brookfield."}
+  - {id: ext-19, task: extraction, difficulty: 5, grader: json, expected: {doses_per_day: 3, total_tablets: 31},
+     prompt: "From the prescription, return JSON with keys doses_per_day (number) and total_tablets (number needed for the whole course).\n\nTake one 500 mg tablet every 8 hours for 10 days. The very first dose only should be doubled (two tablets)."}
+  - {id: ext-20, task: extraction, difficulty: 5, grader: json, expected: {failed_jobs: 1, failed_ids: ["job-116"]},
+     prompt: "From the log, return JSON with keys failed_jobs (number) and failed_ids (array of job ids). A job counts as failed only if its final attempt failed.\n\n09:01 job-114 ok\n09:04 job-115 failed (retry 1)\n09:05 job-115 ok\n09:09 job-116 failed (retry 1)\n09:12 job-116 failed (retry 2, giving up)\n09:15 job-117 ok"}
+  # summarization
+  - {id: sum-1, task: summarization, difficulty: 1, grader: contains, expected: [refund],
+     prompt: "Summarize in one sentence.\n\nThe customer asked for a refund because the order arrived damaged; we approved it."}
+  - {id: sum-2, task: summarization, difficulty: 2, grader: contains, expected: [database, migration],
+     prompt: "Give a one-line summary.\n\nTonight the team will run the database migration. Expect five minutes of read-only mode around 23:00."}
+  - {id: sum-3, task: summarization, difficulty: 2, grader: contains, expected: [budget, approved],
+     prompt: "Summarize the key decision in one sentence.\n\nAfter discussion the board approved the revised budget, with marketing reduced by ten percent."}
+  - {id: sum-4, task: summarization, difficulty: 3, grader: contains, expected: [latency, cache],
+     prompt: "Summarize the incident cause and fix in one sentence.\n\nP95 latency rose to 4 s after the deploy because the cache was disabled by a config typo. Re-enabling the cache restored 300 ms."}
+  - {id: sum-5, task: summarization, difficulty: 4, grader: contains, expected: [churn, onboarding],
+     prompt: "Summarize the analysis in one sentence, naming the main driver.\n\nChurn rose 3 points this quarter. Pricing and support scores were flat. Users who skipped the new onboarding flow churned at twice the rate of those who finished it."}
+  - {id: sum-6, task: summarization, difficulty: 5, grader: contains, expected: [conflict, vendor],
+     prompt: "Summarize the risk in one sentence.\n\nThe security review passed, yet legal flagged that our vendor's data processing terms conflict with the customer's residency requirement; procurement is unaware."}
+  - {id: sum-7, task: summarization, difficulty: 1, grader: contains, expected: [closed, monday],
+     prompt: "Summarize in one sentence.\n\nThe office will be closed on Monday for the public holiday. Normal hours resume on Tuesday."}
+  - {id: sum-8, task: summarization, difficulty: 1, grader: contains, expected: [late, train],
+     prompt: "TL;DR this message in a few words.\n\nHey, just a heads-up that I'm running about 15 minutes late to the standup because my train is delayed."}
+  - {id: sum-9, task: summarization, difficulty: 1, grader: contains, expected: [maintenance, saturday],
+     prompt: "Shorten this notice to one line.\n\nOur website will be down for scheduled maintenance from 01:00 to 03:00 UTC on Saturday. We apologise for the inconvenience."}
+  - {id: sum-10, task: summarization, difficulty: 2, grader: contains, expected: [dark mode],
+     prompt: "Write a one-sentence summary of this product update.\n\nVersion 4.2 adds dark mode to the mobile app, fixes a crash when uploading large photos, and makes search noticeably faster."}
+  - {id: sum-11, task: summarization, difficulty: 2, grader: regex, expected: "order",
+     prompt: "What is the customer's main complaint? One sentence.\n\nI've been a loyal customer for six years. The new app looks nice, but since the update I can't see my past orders anywhere, and I need them for my expense reports."}
+  - {id: sum-12, task: summarization, difficulty: 3, grader: contains, expected: [wednesday],
+     prompt: "Summarize the outcome of this chat thread in one sentence.\n\nAna: Are we still shipping Friday?\nRaj: QA found two blockers in payments.\nAna: Then we wait.\nRaj: Fixes should land Tuesday, so let's target the day after.\nAna: Agreed, let's do that."}
+  - {id: sum-13, task: summarization, difficulty: 3, grader: contains, expected: [blood pressure],
+     prompt: "Summarize this abstract for a general audience in two sentences.\n\nWe conducted a randomized trial of 1,200 adults comparing a daily 20-minute walk with no intervention. After 12 weeks, the walking group showed a mean reduction in systolic blood pressure of 5 mmHg relative to controls, with no adverse events reported."}
+  - {id: sum-14, task: summarization, difficulty: 3, grader: regex, expected: "refund",
+     prompt: "In one sentence, why was the experiment stopped?\n\nThe A/B test of the new checkout ran for nine days. Conversion was up 2 percent, but refund requests in the variant tripled, so the team halted the test pending a review of the new return flow."}
+  - {id: sum-15, task: summarization, difficulty: 4, grader: contains, expected: [certificate],
+     prompt: "Summarize the root cause in one sentence for an executive.\n\nAt 14:02 the payments API began timing out. Engineers first suspected the database, but its metrics were normal. The real problem was an expired TLS certificate on the internal service that issues fraud scores; calls to it hung until the 30-second timeout, which blocked every payment. Renewing it restored service at 14:47."}
+  - {id: sum-16, task: summarization, difficulty: 4, grader: regex, expected: "baseline",
+     prompt: "Summarize the reviewer's overall recommendation in one sentence.\n\nThe paper's method is novel and the writing is clear. However, the evaluation uses a single dataset, and the comparison numbers for prior methods are copied from an earlier paper that used a different preprocessing pipeline, so the claimed gains may not hold. I would support acceptance only if the authors rerun the baselines under identical conditions."}
+  - {id: sum-17, task: summarization, difficulty: 4, grader: contains, expected: [sales, october],
+     prompt: "Condense this into a single sentence that says who has to act and by when.\n\nFrom finance: Q3 expense reports are being processed and most teams are done. The sales team still has 14 open reports, and anything not submitted by 31 October will roll into next quarter's budget, which reduces their Q4 allowance."}
+  - {id: sum-18, task: summarization, difficulty: 5, grader: contains, expected: [encryption key],
+     prompt: "In one sentence, what is the most serious risk hidden in this plan?\n\nThe migration plan looks solid. Each service moves to the new cluster over the next month, one per day, and rollback is a DNS switch. The auth service and the session store share a single encryption key that exists only in the old cluster's secret manager. The old cluster is scheduled for shutdown the day after the last service moves."}
+  - {id: sum-19, task: summarization, difficulty: 5, grader: contains, expected: [renewal, "12"],
+     prompt: "Summarize, in one sentence, what actually changes for existing customers.\n\nWe are pleased to announce simplified pricing. The Starter plan is renamed Basic. New customers on Basic pay $12 per month. Existing Starter customers keep their current $10 price until their next renewal, after which they move to the $12 Basic price. Pro and Enterprise are unchanged."}
+  - {id: sum-20, task: summarization, difficulty: 5, grader: regex, expected: "caus|correlat",
+     prompt: "Summarize the study's conclusion in one sentence, without overstating it.\n\nIn an observational study of 40,000 office workers, those who used standing desks reported 15 percent less back pain. The authors caution that standing-desk users were also younger and exercised more, and that the design cannot establish that the desks themselves reduced pain."}
+  # translation
+  - {id: tr-1, task: translation, difficulty: 1, grader: contains, expected: [bonjour],
+     prompt: "Translate into French: Hello"}
+  - {id: tr-2, task: translation, difficulty: 1, grader: contains, expected: [gracias],
+     prompt: "Translate into Spanish: Thank you"}
+  - {id: tr-3, task: translation, difficulty: 2, grader: contains, expected: [biblioteca],
+     prompt: "Translate into Spanish: Where is the library?"}
+  - {id: tr-4, task: translation, difficulty: 3, grader: contains, expected: [rendez-vous],
+     prompt: "Translate into French, keeping it formal: Could we move our meeting to Thursday?"}
+  - {id: tr-5, task: translation, difficulty: 4, grader: contains, expected: [kündigungsfrist],
+     prompt: "Translate the contract term into German: notice period of three months"}
+  - {id: tr-6, task: translation, difficulty: 5, grader: contains, expected: [pluie],
+     prompt: "Translate the idiom into natural French (not word for word): It's raining cats and dogs."}
+  - {id: tr-7, task: translation, difficulty: 1, grader: contains, expected: [guten morgen],
+     prompt: "Translate into German: Good morning"}
+  - {id: tr-8, task: translation, difficulty: 1, grader: contains, expected: [gato],
+     prompt: "How do you say 'cat' in Spanish?"}
+  - {id: tr-9, task: translation, difficulty: 2, grader: contains, expected: [vorrei],
+     prompt: "Translate into Italian: I would like a coffee, please."}
+  - {id: tr-10, task: translation, difficulty: 2, grader: contains, expected: [train, huit],
+     prompt: "Can you put this into French? The train leaves at eight o'clock."}
+  - {id: tr-11, task: translation, difficulty: 2, grader: contains, expected: [onde],
+     prompt: "Please translate into Portuguese: Where is the bathroom?"}
+  - {id: tr-12, task: translation, difficulty: 3, grader: contains, expected: [puede],
+     prompt: "Translate into Spanish, addressing the person formally with usted: Can you help me find my luggage?"}
+  - {id: tr-13, task: translation, difficulty: 3, grader: contains, expected: [freuen],
+     prompt: "I'm ending a business email in German. How do I write: We look forward to your reply."}
+  - {id: tr-14, task: translation, difficulty: 3, grader: regex, expected: "ありがとう",
+     prompt: "Translate into Japanese: Thank you very much."}
+  - {id: tr-15, task: translation, difficulty: 4, grader: contains, expected: [locataire, préavis],
+     prompt: "Translate into French, keeping the legal register: The tenant shall give one month's notice before vacating the premises."}
+  - {id: tr-16, task: translation, difficulty: 4, grader: regex, expected: "te extraño|te echo de menos",
+     prompt: "How would a native speaker say this in Spanish? Not a literal rendering, please: I miss you."}
+  - {id: tr-17, task: translation, difficulty: 4, grader: regex, expected: "verschoben|vertagt",
+     prompt: "Translate into German for an internal announcement: The meeting has been postponed until further notice."}
+  - {id: tr-18, task: translation, difficulty: 5, grader: contains, expected: [tiro],
+     prompt: "Give the natural Spanish equivalent of this English idiom, using the expression a Spanish speaker would actually use: to kill two birds with one stone"}
+  - {id: tr-19, task: translation, difficulty: 5, grader: contains, expected: [greek],
+     prompt: "What is the natural English equivalent of the German idiom 'Ich verstehe nur Bahnhof'? Give the English expression, not a literal translation."}
+  - {id: tr-20, task: translation, difficulty: 5, grader: contains, expected: [sensitive, currently],
+     prompt: "Translate into English, watching out for false friends: Je suis sensible au froid, alors actuellement je reste chez moi."}
+  # math
+  - {id: math-1, task: math, difficulty: 1, grader: number, expected: 42,
+     prompt: "Calculate 19 + 23. Answer with the number only."}
+  - {id: math-2, task: math, difficulty: 2, grader: number, expected: 15,
+     prompt: "What is 20 percent of 75? Number only."}
+  - {id: math-3, task: math, difficulty: 3, grader: number, expected: 1.25, tolerance: 0.001,
+     prompt: "A plan costs 3 dollars per 1M input tokens. What does 416,667 input tokens cost, rounded to two decimals? Number only."}
+  - {id: math-4, task: math, difficulty: 3, grader: number, expected: 12,
+     prompt: "Solve for x: 3x - 7 = 29. Number only."}
+  - {id: math-5, task: math, difficulty: 4, grader: number, expected: 0.25, tolerance: 0.001,
+     prompt: "Two fair coins are flipped. What is the probability both are heads? Decimal only."}
+  - {id: math-6, task: math, difficulty: 5, grader: number, expected: 252,
+     prompt: "How many ways can a committee of 5 be chosen from 10 people? Number only."}
+  - {id: math-7, task: math, difficulty: 1, grader: number, expected: 56,
+     prompt: "What is 8 times 7? Just the number."}
+  - {id: math-8, task: math, difficulty: 1, grader: number, expected: 63,
+     prompt: "100 minus 37 equals what? Number only."}
+  - {id: math-9, task: math, difficulty: 1, grader: number, expected: 180,
+     prompt: "How many minutes are there in 3 hours? Reply with just the number."}
+  - {id: math-10, task: math, difficulty: 2, grader: number, expected: 30,
+     prompt: "A shirt costs $40 and is on sale for 25% off. What is the sale price in dollars? Number only."}
+  - {id: math-11, task: math, difficulty: 2, grader: number, expected: 17,
+     prompt: "What is the average of 12, 15, 18 and 23? Give only the number."}
+  - {id: math-12, task: math, difficulty: 2, grader: number, expected: 5000,
+     prompt: "Convert 5 kilometers to meters. Number only."}
+  - {id: math-13, task: math, difficulty: 3, grader: number, expected: 60,
+     prompt: "A car covers 150 km in 2.5 hours. What is its average speed in km/h? Number only."}
+  - {id: math-14, task: math, difficulty: 3, grader: number, expected: 20, tolerance: 0.001,
+     prompt: "If 3 notebooks cost $7.50, how much do 8 notebooks cost in dollars? Number only."}
+  - {id: math-15, task: math, difficulty: 4, grader: number, expected: 1157.63, tolerance: 0.006,
+     prompt: "I invest $1,000 at 5% annual interest, compounded yearly. What is it worth after 3 years, to the nearest cent? Number only."}
+  - {id: math-16, task: math, difficulty: 4, grader: number, expected: 9368,
+     prompt: "What is the sum of all integers from 1 to 200 that are divisible by 3 or by 5? Number only."}
+  - {id: math-17, task: math, difficulty: 4, grader: number, expected: 2, tolerance: 0.001,
+     prompt: "Pipe A fills a tank in 6 hours and pipe B fills it in 3 hours. With both open, how many hours does it take to fill the tank? Number only."}
+  - {id: math-18, task: math, difficulty: 5, grader: number, expected: 0.0045, tolerance: 0.0001,
+     prompt: "Two cards are drawn from a standard 52-card deck without replacement. What is the probability that both are aces? Give a decimal rounded to 4 places, number only."}
+  - {id: math-19, task: math, difficulty: 5, grader: number, expected: 9,
+     prompt: "What is the remainder when 7^100 is divided by 13? Number only."}
+  - {id: math-20, task: math, difficulty: 5, grader: number, expected: 0.161, tolerance: 0.001,
+     prompt: "A disease affects 1% of a population. A test detects it 95% of the time when it is present and gives a false positive 5% of the time when it is absent. If someone tests positive, what is the probability they have the disease? Decimal rounded to 3 places, number only."}
+  # reasoning
+  - {id: rsn-1, task: reasoning, difficulty: 2, grader: contains, expected: [tuesday],
+     prompt: "If today is Monday, what day is it tomorrow? Explain why in one sentence."}
+  - {id: rsn-2, task: reasoning, difficulty: 3, grader: contains, expected: [cache],
+     prompt: "Explain why repeated identical prompts are cheaper behind a response cache, and name the component that saves the money."}
+  - {id: rsn-3, task: reasoning, difficulty: 3, grader: contains, expected: ["no"],
+     prompt: "All routers are gateways. Some gateways are slow. Does it follow that some routers are slow? Answer yes or no and explain why."}
+  - {id: rsn-4, task: reasoning, difficulty: 4, grader: contains, expected: [read replica],
+     prompt: "Compare the trade-offs and recommend one: our dashboard queries overload the primary database at month end. Options: bigger primary, read replica, nightly batch. Recommend the option with the least risk."}
+  - {id: rsn-5, task: reasoning, difficulty: 5, grader: contains, expected: [idempotency],
+     prompt: "Step by step, explain how to make a payment retry safe across network timeouts in a distributed system, and name the key mechanism."}
+  - {id: rsn-6, task: reasoning, difficulty: 5, grader: contains, expected: [race condition],
+     prompt: "Analyze: two workers read a budget of $10, both see $2 remaining, both spend $2. Name the failure and the class of bug."}
+  - {id: rsn-7, task: reasoning, difficulty: 1, grader: contains, expected: [grace],
+     prompt: "Olivia is taller than Grace. Which of them is shorter? Answer with the name."}
+  - {id: rsn-8, task: reasoning, difficulty: 1, grader: number, expected: 2,
+     prompt: "I have 3 apples and eat one. How many apples do I have left? Number only."}
+  - {id: rsn-9, task: reasoning, difficulty: 1, grader: number, expected: 10,
+     prompt: "What comes next in the sequence 2, 4, 6, 8? Number only."}
+  - {id: rsn-10, task: reasoning, difficulty: 1, grader: contains, expected: ["2:45"],
+     prompt: "A meeting starts at 2:00 pm and lasts 45 minutes. What time does it end?"}
+  - {id: rsn-11, task: reasoning, difficulty: 2, grader: contains, expected: [same],
+     prompt: "Which weighs more, a kilogram of feathers or a kilogram of bricks?"}
+  - {id: rsn-12, task: reasoning, difficulty: 2, grader: contains, expected: [pedro],
+     prompt: "Maria is older than Jun, and Jun is older than Pedro. Who is the youngest? Reply with the name only."}
+  - {id: rsn-13, task: reasoning, difficulty: 2, grader: contains, expected: [saturday],
+     prompt: "Today is Wednesday. What day of the week will it be 10 days from now?"}
+  - {id: rsn-14, task: reasoning, difficulty: 3, grader: number, expected: 5,
+     prompt: "A bat and a ball cost $1.10 in total. The bat costs $1.00 more than the ball. How much does the ball cost, in cents? Number only."}
+  - {id: rsn-15, task: reasoning, difficulty: 3, grader: number, expected: 5,
+     prompt: "If 5 machines take 5 minutes to make 5 widgets, how many minutes would 100 machines take to make 100 widgets? Number only."}
+  - {id: rsn-16, task: reasoning, difficulty: 4, grader: choice, choices: [knight, knave], expected: knight,
+     prompt: "On an island, knights always tell the truth and knaves always lie. A says: 'B is a knave.' B says: 'A and I are both knights.' Is A a knight or a knave? Answer with one word."}
+  - {id: rsn-17, task: reasoning, difficulty: 4, grader: number, expected: 8,
+     prompt: "Five tasks have dependencies: C needs A; D needs both B and C; E needs D. Durations: A 2 h, B 4 h, C 3 h, D 1 h, E 2 h. With unlimited parallel workers, what is the minimum total time in hours to finish everything? Number only."}
+  - {id: rsn-18, task: reasoning, difficulty: 4, grader: number, expected: 0.67, tolerance: 0.005,
+     prompt: "In the Monty Hall game you pick door 1. The host, who knows where the car is, opens door 3 to reveal a goat and offers you the chance to switch. What is your probability of winning if you switch? Decimal rounded to 2 places, number only."}
+  - {id: rsn-19, task: reasoning, difficulty: 5, grader: choice, choices: [apples, oranges, mixed], expected: mixed,
+     prompt: "Three boxes are labeled apples, oranges and mixed, and every label is wrong. You may take out one fruit from one box, without looking inside. Which box should you pick from so you can then relabel all three correctly? Reply with just that box's current label."}
+  - {id: rsn-20, task: reasoning, difficulty: 5, grader: number, expected: 4,
+     prompt: "A key-value store keeps 5 replicas of each item and reads from 2 of them. What is the smallest write quorum that guarantees every read sees the most recent successful write? Number only."}
+  # coding
+  - {id: code-1, task: coding, difficulty: 1, grader: contains, expected: ["def add", "return"],
+     prompt: "Write a Python function add(a, b) that returns their sum."}
+  - {id: code-2, task: coding, difficulty: 2, grader: contains, expected: ["select", "count"],
+     prompt: "Write a SQL query that counts the rows in the orders table."}
+  - {id: code-3, task: coding, difficulty: 3, grader: contains, expected: ["def is_palindrome", "[::-1]"],
+     prompt: "Write a Python function is_palindrome(s) that ignores case and spaces."}
+  - {id: code-4, task: coding, difficulty: 4, grader: contains, expected: ["async", "semaphore"],
+     prompt: "Refactor this Python to fetch URLs concurrently with at most 5 in flight, using asyncio.\n\n```python\nfor u in urls:\n    fetch(u)\n```"}
+  - {id: code-5, task: coding, difficulty: 5, grader: contains, expected: ["lock", "incr"],
+     prompt: "Fix the race condition: two processes read a Redis counter, add one in Python and write it back. Show the corrected code and explain the edge cases."}
+  - {id: code-6, task: coding, difficulty: 5, grader: contains, expected: ["lru", "dict"],
+     prompt: "Implement an O(1) LRU cache class in Python with get and put, production-ready, handling edge cases."}
+  - {id: code-7, task: coding, difficulty: 1, grader: number, expected: 5,
+     prompt: "What does this Python print? Answer with the output only.\n\n```python\nprint(len('hello'))\n```"}
+  - {id: code-8, task: coding, difficulty: 1, grader: regex, expected: "::-1",
+     prompt: "Give me a Python one-liner that reverses the string s using slicing."}
+  - {id: code-9, task: coding, difficulty: 1, grader: contains, expected: ["select *", customers],
+     prompt: "In SQL, how do I get all columns from a table named customers?"}
+  - {id: code-10, task: coding, difficulty: 2, grader: contains, expected: [def, for],
+     prompt: "Write a Python function that returns the largest value in a list without using the built-in max(). Use a loop."}
+  - {id: code-11, task: coding, difficulty: 2, grader: number, expected: 12,
+     prompt: "What does this JavaScript expression evaluate to? Value only.\n\n[1, 2, 3].map(x => x * 2).reduce((a, b) => a + b, 0)"}
+  - {id: code-12, task: coding, difficulty: 2, grader: contains, expected: [wc -l],
+     prompt: "What shell command counts the number of lines in file.txt?"}
+  - {id: code-13, task: coding, difficulty: 3, grader: number, expected: 3,
+     prompt: "What does this print? Output only.\n\n```python\ndef f(x, acc=[]):\n    acc.append(x)\n    return len(acc)\n\nf(1)\nf(2)\nprint(f(3))\n```"}
+  - {id: code-14, task: coding, difficulty: 3, grader: contains, expected: [group by, having],
+     prompt: "Write a SQL query over employees(name, department, salary) that returns each department and its average salary, only for departments with more than 10 employees."}
+  - {id: code-15, task: coding, difficulty: 3, grader: contains, expected: [git reset],
+     prompt: "I committed to main by mistake and haven't pushed yet. Which git command undoes that last commit but keeps my changes in the working tree?"}
+  - {id: code-16, task: coding, difficulty: 4, grader: number, expected: 6,
+     prompt: "What does this print? Output only.\n\n```python\nfuncs = [lambda: i for i in range(3)]\nprint(sum(f() for f in funcs))\n```"}
+  - {id: code-17, task: coding, difficulty: 4, grader: regex, expected: "(?s)<T>.*undefined",
+     prompt: "Write a TypeScript generic function first<T> that returns the first element of an array, or undefined when the array is empty, with an accurate return type."}
+  - {id: code-18, task: coding, difficulty: 4, grader: contains, expected: [create index, user_id, created_at],
+     prompt: "This Postgres query is slow on a 200M-row table: SELECT * FROM events WHERE user_id = $1 ORDER BY created_at DESC LIMIT 20. What index should I add? Give the CREATE INDEX statement."}
+  - {id: code-19, task: coding, difficulty: 5, grader: contains, expected: [threading, lock],
+     prompt: "Implement a token-bucket rate limiter in Python that can be shared across threads. It takes a capacity and a refill rate per second and exposes allow() returning a bool. Explain the concurrency edge cases you handled."}
+  - {id: code-20, task: coding, difficulty: 5, grader: number, expected: 99,
+     prompt: "What does this Go program print? Output only.\n\n```go\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    s := []int{1, 2, 3}\n    t := s[:2]\n    t = append(t, 99)\n    fmt.Println(s[2])\n}\n```"}
+  # chat
+  - {id: chat-1, task: chat, difficulty: 1, grader: contains, expected: [hello],
+     prompt: "Say hello to a new teammate."}
+  - {id: chat-2, task: chat, difficulty: 1, grader: contains, expected: [welcome],
+     prompt: "Write a one-line welcome message for new students."}
+  - {id: chat-3, task: chat, difficulty: 2, grader: contains, expected: [sorry],
+     prompt: "Write a short apology to a customer whose delivery is late."}
+  - {id: chat-4, task: chat, difficulty: 2, grader: contains, expected: [thursday],
+     prompt: "Reply to a colleague confirming the demo moves to Thursday."}
+  - {id: chat-5, task: chat, difficulty: 3, grader: contains, expected: [boundary],
+     prompt: "Draft a polite message declining extra weekend work, setting a clear boundary."}
+  - {id: chat-6, task: chat, difficulty: 4, grader: contains, expected: [feedback],
+     prompt: "Write a diplomatic note to a senior engineer giving critical feedback on a rushed design."}
+  - {id: chat-7, task: chat, difficulty: 1, grader: contains, expected: [birthday, priya],
+     prompt: "Wish my colleague Priya a happy birthday in one line."}
+  - {id: chat-8, task: chat, difficulty: 1, grader: regex, expected: "thank",
+     prompt: "Write a quick note to a friend who lent me a book I really enjoyed."}
+  - {id: chat-9, task: chat, difficulty: 2, grader: regex, expected: "(?s)(?=.*timesheet)(?=.*friday)",
+     prompt: "Send a short reminder to the team that timesheets are due Friday at 5pm."}
+  - {id: chat-10, task: chat, difficulty: 2, grader: contains, expected: [november],
+     prompt: "Write a friendly out-of-office reply saying I'm back on 3 November."}
+  - {id: chat-11, task: chat, difficulty: 3, grader: contains, expected: [week, supplier],
+     prompt: "Write a short message to a client explaining that their project will slip by one week because a supplier shipped the wrong parts, and offer a call to discuss."}
+  - {id: chat-12, task: chat, difficulty: 3, grader: contains, expected: [store credit],
+     prompt: "A customer wants a refund 45 days after purchase, but our policy allows 30 days. Write a kind reply that says no but offers store credit instead."}
+  - {id: chat-13, task: chat, difficulty: 3, grader: regex, expected: "(?s)(?=.*congrat)(?=.*manager)",
+     prompt: "Write a message to a teammate who was just promoted to engineering manager. Warm but professional."}
+  - {id: chat-14, task: chat, difficulty: 4, grader: regex, expected: "(?s)(?=.*restor)(?=.*24)",
+     prompt: "Draft a reply to an angry customer who says our app deleted their notes. We found the notes in a backup and can restore them within 24 hours. Acknowledge the frustration without being defensive."}
+  - {id: chat-15, task: chat, difficulty: 4, grader: contains, expected: [heater],
+     prompt: "Help me write a message to my landlord about the broken heater. I've already reported it twice this month and nothing has happened. Firm but polite."}
+  - {id: chat-16, task: chat, difficulty: 4, grader: contains, expected: ["18", billing],
+     prompt: "Write a short message to my manager asking for a raise. Mention that I led the billing migration that cut processing costs by 18 percent."}
+  - {id: chat-17, task: chat, difficulty: 5, grader: contains, expected: [june 2027, migration],
+     prompt: "Write to a long-time customer that we are discontinuing the on-premise version they use at the end of June 2027. They get 12 months of the cloud plan free, and our team will handle their data migration. They will be unhappy, so be empathetic without overpromising."}
+  - {id: chat-18, task: chat, difficulty: 5, grader: contains, expected: [loss, bereavement],
+     prompt: "An employee whose father just passed away emailed to say they'll miss the product launch. Write a compassionate reply from their manager that removes any work pressure and mentions they can take the full bereavement leave."}
+  - {id: chat-19, task: chat, difficulty: 5, grader: contains, expected: ["15", discount],
+     prompt: "Write a message to an important client declining their request to build a custom feature for free. Offer to include it in a paid second phase at a 15% discount, and keep the relationship warm."}
+  - {id: chat-20, task: chat, difficulty: 5, grader: contains, expected: [kubernetes, future],
+     prompt: "Write a rejection to a candidate after the final interview round. They were strong, but the other finalist had more Kubernetes experience. Be honest and specific but kind, and invite them to apply for future roles."}
