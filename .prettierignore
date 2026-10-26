@@ -1,0 +1,10 @@
+node_modules
+.next
+coverage
+pnpm-lock.yaml
+.terraform
+*.tfstate*
+apps/web/src/lib/api/schema.d.ts
+playwright-report
+test-results
+scripts/qa/output
